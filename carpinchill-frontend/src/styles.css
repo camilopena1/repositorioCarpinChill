@@ -1,0 +1,29 @@
+/* =============================================
+   CARPINCHILL - Estilos globales
+   ============================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: #f0f4f8;
+  color: #333;
+  min-height: 100vh;
+}
+
+/* Scrollbar suave */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #1B4F72; border-radius: 3px; }
+
+/* Links base */
+a { color: #1B4F72; }
+
+/* Utilidades */
+.text-center { text-align: center; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
