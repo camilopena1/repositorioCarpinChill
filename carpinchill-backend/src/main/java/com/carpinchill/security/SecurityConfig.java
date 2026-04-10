@@ -82,38 +82,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desactivar CSRF (no necesario para APIs REST)
             .csrf(AbstractHttpConfigurer::disable)
-
-            // Configurar CORS para Angular
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-            // Permitir que la consola H2 use frames (por defecto Spring bloquea esto)
             .headers(headers -> headers
                     .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-
-            // Reglas de autorización por endpoint
             .authorizeHttpRequests(auth -> auth
-                    // Rutas completamente públicas
                     .requestMatchers("/api/auth/login", "/api/auth/ping").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
-
-                    // GET de viajes es público (catálogo)
                     .requestMatchers(HttpMethod.GET, "/api/viajes/**").permitAll()
-
-                    // POST, PUT, DELETE requieren autenticación
                     .requestMatchers(HttpMethod.POST, "/api/viajes/**").authenticated()
                     .requestMatchers(HttpMethod.PUT, "/api/viajes/**").authenticated()
                     .requestMatchers(HttpMethod.DELETE, "/api/viajes/**").authenticated()
                     .requestMatchers(HttpMethod.PATCH, "/api/viajes/**").authenticated()
-
-                    // El resto de rutas requiere autenticación
                     .anyRequest().authenticated()
-            )
-
-            // Login básico por formulario (para probar en el navegador)
-            .httpBasic(basic -> {});
-
+            );
+            // .httpBasic(basic -> {});  ← esta línea eliminada
+    
         return http.build();
     }
 
