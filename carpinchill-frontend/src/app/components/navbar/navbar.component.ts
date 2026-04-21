@@ -4,6 +4,12 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
+/**
+ * Barra de navegación global.
+ *
+ * Actualizado en entrega 3 (rama feature/panel-admin):
+ *   - Muestra enlace "Admin" solo cuando el usuario está autenticado
+ */
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -18,11 +24,16 @@ import { Router } from '@angular/router';
         <li>
           <a routerLink="/viajes" routerLinkActive="activo">Viajes</a>
         </li>
+        <!-- Enlace al panel admin: solo para usuarios autenticados -->
+        <li *ngIf="estaAutenticado()">
+          <a routerLink="/admin" routerLinkActive="activo">⚙️ Admin</a>
+        </li>
         <li *ngIf="!estaAutenticado()">
           <a routerLink="/login" routerLinkActive="activo" class="btn-login">Iniciar sesión</a>
         </li>
         <li *ngIf="estaAutenticado()" class="usuario-info">
           <span>👤 {{ getNombreUsuario() }}</span>
+          <span class="rol-badge">{{ getRol() }}</span>
           <button (click)="cerrarSesion()" class="btn-logout">Salir</button>
         </li>
       </ul>
@@ -71,8 +82,15 @@ import { Router } from '@angular/router';
     .usuario-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       font-size: 14px;
+    }
+    .rol-badge {
+      background: rgba(255,255,255,0.15);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
     }
     .btn-logout {
       background: rgba(255,255,255,0.15);
@@ -83,12 +101,11 @@ import { Router } from '@angular/router';
       cursor: pointer;
       font-size: 13px;
     }
-    .btn-logout:hover {
-      background: rgba(255,255,255,0.25);
-    }
+    .btn-logout:hover { background: rgba(255,255,255,0.25); }
   `]
 })
 export class NavbarComponent {
+
   constructor(private authService: AuthService, private router: Router) {}
 
   estaAutenticado(): boolean {
@@ -97,6 +114,12 @@ export class NavbarComponent {
 
   getNombreUsuario(): string {
     return this.authService.getUsuarioActual()?.username || '';
+  }
+
+  getRol(): string {
+    const rol = this.authService.getUsuarioActual()?.rol || '';
+    // Quita el prefijo ROLE_ que añade Spring Security
+    return rol.replace('ROLE_', '');
   }
 
   cerrarSesion(): void {
