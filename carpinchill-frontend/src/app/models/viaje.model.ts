@@ -1,8 +1,6 @@
-// Modelo que representa un viaje.
-// Tiene que coincidir exactamente con los campos que devuelve el backend de Brandon.
-
+// Modelo que representa un viaje (coincide con ViajeDTO del backend)
 export interface Viaje {
-  id: number;
+  id?: number;
   titulo: string;
   descripcion: string;
   destino: string;
@@ -10,21 +8,23 @@ export interface Viaje {
   latitud: number;
   longitud: number;
   precio: number;
-  fechaInicio: string;   // Spring Boot serializa LocalDate como "2025-06-15"
+  fechaInicio: string;
   fechaFin: string;
   plazasTotales: number;
   plazasDisponibles: number;
   imagenUrl: string;
   activo: boolean;
+  // Campo calculado que devuelve el backend en el DTO
+  plazasOcupadas?: number;
 }
 
-// Modelo para el login
+// Petición de login
 export interface LoginRequest {
   username: string;
   password: string;
 }
 
-// Lo que devuelve el backend al hacer login
+// Respuesta del backend al hacer login
 export interface LoginResponse {
   mensaje: string;
   username: string;
@@ -32,9 +32,10 @@ export interface LoginResponse {
   autenticado: boolean;
 }
 
-// Info del usuario logueado (guardada en localStorage)
+// Usuario en sesión (guardado en localStorage)
 export interface Usuario {
   username: string;
+  password?: string; // Guardado para HTTP Basic — se elimina al implementar JWT
   rol: string;
   autenticado: boolean;
 }
