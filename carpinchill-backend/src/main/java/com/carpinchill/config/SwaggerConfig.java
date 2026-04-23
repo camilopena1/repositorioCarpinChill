@@ -15,8 +15,6 @@ import org.springframework.context.annotation.Configuration;
  * sin necesidad de Postman u otra herramienta externa.
  *
  * URL de acceso: http://localhost:8080/swagger-ui/index.html
- *
- * Añadido en la rama feature/swagger — entrega 3 (abril 2026)
  */
 @Configuration
 public class SwaggerConfig {
