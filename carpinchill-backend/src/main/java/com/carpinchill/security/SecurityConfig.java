@@ -24,21 +24,15 @@ import java.util.List;
 
 /**
  * Configuración de seguridad de la aplicación.
+ *   - Añadidas rutas de Swagger como públicas:
+ *       /swagger-ui/**
+ *       /v3/api-docs/**
+ *   - Añadidas rutas de Reservas con control de acceso.
  *
- * Usuarios en memoria (para esta entrega, sin BD):
- *   admin   / admin123  → rol ADMIN
- *   agente  / agente123 → rol AGENTE
- *   cliente / cliente123 → rol CLIENTE
- *
- * Rutas públicas (sin login):
- *   GET  /api/viajes         → catálogo público
- *   GET  /api/viajes/{id}    → detalle público
- *   POST /api/auth/login     → login
- *   GET  /api/auth/ping      → health check
- *   /h2-console/**           → consola H2 para depurar
- *
- * Rutas protegidas:
- *   POST/PUT/DELETE /api/viajes → necesita autenticación
+ * Usuarios en memoria:
+ *   admin   / admin123  → ADMIN
+ *   agente  / agente123 → AGENTE
+ *   cliente / cliente123 → CLIENTE
  */
 @Configuration
 @EnableWebSecurity
@@ -49,10 +43,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Usuarios en memoria para esta entrega.
-     * En la siguiente entrega se reemplazará por usuarios en BD.
-     */
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
         var admin = User.builder()
@@ -76,39 +66,50 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(admin, agente, cliente);
     }
 
-    /**
-     * Reglas de seguridad para cada endpoint.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // Necesario para que la consola H2 funcione
             .headers(headers -> headers
                     .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
             .authorizeHttpRequests(auth -> auth
+
+                    // Rutas públicas
                     .requestMatchers("/api/auth/login", "/api/auth/ping").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
+
+                    .requestMatchers(
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml"
+                    ).permitAll()
+
+                    // Viajes: GET público, resto autenticado
                     .requestMatchers(HttpMethod.GET, "/api/viajes/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/viajes/**").authenticated()
                     .requestMatchers(HttpMethod.PUT, "/api/viajes/**").authenticated()
                     .requestMatchers(HttpMethod.DELETE, "/api/viajes/**").authenticated()
                     .requestMatchers(HttpMethod.PATCH, "/api/viajes/**").authenticated()
+
+                    // Reservas: POST público (cualquiera puede reservar)
+                    // el resto requiere autenticación
+                    .requestMatchers(HttpMethod.POST, "/api/reservas").authenticated()
+                    .requestMatchers("/api/reservas/**").authenticated()
+
+                    // El resto requiere autenticación
                     .anyRequest().authenticated()
             );
-            // .httpBasic(basic -> {});  ← esta línea eliminada
-    
+
         return http.build();
     }
 
-    /**
-     * Configuración CORS para permitir peticiones desde Angular.
-     * En desarrollo Angular corre en localhost:4200.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*")); // En producción poner solo la URL de Angular
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         config.setAllowCredentials(true);
@@ -118,9 +119,6 @@ public class SecurityConfig {
         return source;
     }
 
-    /**
-     * AuthenticationManager necesario en AuthController para validar credenciales.
-     */
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authConfig) throws Exception {
