@@ -4,12 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
-/**
- * Barra de navegación global.
- *
- * Actualizado en entrega 3 (rama feature/panel-admin):
- *   - Muestra enlace "Admin" solo cuando el usuario está autenticado
- */
+
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -21,22 +16,32 @@ import { Router } from '@angular/router';
       </div>
 
       <ul class="navbar-links">
-        <li>
-          <a routerLink="/viajes" routerLinkActive="activo">Viajes</a>
-        </li>
-        <!-- Enlace al panel admin: solo para usuarios autenticados -->
-        <li *ngIf="estaAutenticado()">
-          <a routerLink="/admin" routerLinkActive="activo">⚙️ Admin</a>
-        </li>
-        <li *ngIf="!estaAutenticado()">
-          <a routerLink="/login" routerLinkActive="activo" class="btn-login">Iniciar sesión</a>
-        </li>
-        <li *ngIf="estaAutenticado()" class="usuario-info">
-          <span>👤 {{ getNombreUsuario() }}</span>
-          <span class="rol-badge">{{ getRol() }}</span>
-          <button (click)="cerrarSesion()" class="btn-logout">Salir</button>
-        </li>
-      </ul>
+  <li>
+    <a routerLink="/viajes" routerLinkActive="activo">Viajes</a>
+  </li>
+
+  <li>
+    <a routerLink="/registro" routerLinkActive="activo">Registrarse</a>
+  </li>
+
+  <li *ngIf="estaAutenticado()">
+    <a routerLink="/mis-reservas" routerLinkActive="activo">Mis Reservas</a>
+  </li>
+
+  <li *ngIf="estaAutenticado()">
+    <a routerLink="/admin" routerLinkActive="activo">⚙️ Admin</a>
+  </li>
+
+  <li *ngIf="!estaAutenticado()">
+    <a routerLink="/login" routerLinkActive="activo" class="btn-login">Iniciar sesión</a>
+  </li>
+
+  <li *ngIf="estaAutenticado()" class="usuario-info">
+    <span>👤 {{ getNombreUsuario() }}</span>
+    <span class="rol-badge">{{ getRol() }}</span>
+    <button (click)="cerrarSesion()" class="btn-logout">Salir</button>
+  </li>
+</ul>
     </nav>
   `,
   styles: [`

@@ -40,6 +40,9 @@ export class AuthService {
       })
     );
   }
+  registro(data: any): Observable<any> {
+  return this.http.post(`${this.apiUrl}/register`, data);
+}
 
   logout(): void {
     localStorage.removeItem(this.USER_KEY);
