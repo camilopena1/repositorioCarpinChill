@@ -21,4 +21,4 @@ COPY --from=build /app/target/carpinchill-backend-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 
 # Comando para iniciar la app
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-Dserver.port=${PORT:-8080}", "-jar", "app.jar"]
