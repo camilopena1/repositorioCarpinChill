@@ -1,4 +1,4 @@
-// Modelo que representa un viaje (coincide con ViajeDTO del backend)
+// Modelo que representa un viaje
 export interface Viaje {
   id?: number;
   titulo: string;
@@ -14,28 +14,36 @@ export interface Viaje {
   plazasDisponibles: number;
   imagenUrl: string;
   activo: boolean;
-  // Campo calculado que devuelve el backend en el DTO
   plazasOcupadas?: number;
+  valoracionMedia?: number;
 }
 
 // Petición de login
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
-// Respuesta del backend al hacer login
-export interface LoginResponse {
-  mensaje: string;
-  username: string;
-  rol: string;
-  autenticado: boolean;
+export interface RegistroRequest {
+  nombre: string;
+  apellidos: string;
+  email: string;
+  password: string;
 }
 
-// Usuario en sesión (guardado en localStorage)
-export interface Usuario {
-  username: string;
-  password?: string; // Guardado para HTTP Basic — se elimina al implementar JWT
+export interface AuthResponse {
+  token: string;
+  email: string;
+  nombre: string;
   rol: string;
+  usuarioId: number;
+}
+
+// Usuario en sesión
+export interface Usuario {
+  email: string;
+  nombre: string;
+  rol: string;
+  usuarioId: number;
   autenticado: boolean;
 }
