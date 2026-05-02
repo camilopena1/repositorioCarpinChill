@@ -1,5 +1,17 @@
 package com.carpinchill.controller;
 
+import com.carpinchill.dto.request.LoginRequest;
+import com.carpinchill.dto.request.RegistroRequest;
+import com.carpinchill.dto.response.AuthResponse;
+import com.carpinchill.model.Usuario;
+import com.carpinchill.security.JwtUtil;
+import com.carpinchill.security.SecurityConfig;
+import com.carpinchill.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -7,80 +19,84 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Controlador de autenticación.
- *
- * Endpoint:
- *   POST /api/auth/login   → { "username": "admin", "password": "admin123" }
- *   POST /api/auth/logout  → cierra sesión
- *   GET  /api/auth/me      → devuelve info del usuario logueado
- */
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
+@Tag(name = "Autenticación", description = "Registro, login y gestión de sesión")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
+    private final AuthenticationManager authManager;
+    private final JwtUtil jwtUtil;
+    private final UsuarioService usuarioService;
+    private final SecurityConfig securityConfig;
 
-    public AuthController(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil,
+                          UsuarioService usuarioService, SecurityConfig securityConfig) {
+        this.authManager = authManager;
+        this.jwtUtil = jwtUtil;
+        this.usuarioService = usuarioService;
+        this.securityConfig = securityConfig;
     }
 
-    // ---- POST /api/auth/login ----
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credenciales) {
-        String username = credenciales.get("username");
-        String password = credenciales.get("password");
-
+    @Operation(summary = "Registrar nuevo usuario")
+    @PostMapping("/registro")
+    public ResponseEntity<?> registro(@Valid @RequestBody RegistroRequest request,
+                                       HttpServletRequest httpRequest) {
+        // Rate limiting
+        if (!securityConfig.getBucketParaIp(httpRequest.getRemoteAddr()).tryConsume(1)) {
+            return ResponseEntity.status(429).body(Map.of("error", "Demasiadas peticiones"));
+        }
         try {
-            // Spring Security valida las credenciales contra los usuarios en memoria
-            Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
+            Usuario usuario = usuarioService.registrar(request);
+            // Auto-login tras registro
+            Authentication auth = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
+            String token = jwtUtil.generateToken(auth);
+            return ResponseEntity.status(HttpStatus.CREATED).body(AuthResponse.from(token, usuario));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
-            // Respuesta con datos del usuario autenticado
-            Map<String, Object> respuesta = new HashMap<>();
-            respuesta.put("mensaje", "Login correcto");
-            respuesta.put("username", auth.getName());
-            respuesta.put("rol", auth.getAuthorities().iterator().next().getAuthority());
-            respuesta.put("autenticado", true);
-
-            return ResponseEntity.ok(respuesta);
-
+    @Operation(summary = "Login con email y contraseña")
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+                                    HttpServletRequest httpRequest) {
+        // Rate limiting
+        if (!securityConfig.getBucketParaIp(httpRequest.getRemoteAddr()).tryConsume(1)) {
+            return ResponseEntity.status(429).body(Map.of("error", "Demasiadas peticiones"));
+        }
+        try {
+            Authentication auth = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+            String token = jwtUtil.generateToken(auth);
+            Usuario usuario = usuarioService.findByEmail(request.getEmail());
+            return ResponseEntity.ok(AuthResponse.from(token, usuario));
         } catch (BadCredentialsException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("mensaje", "Usuario o contraseña incorrectos");
-            error.put("autenticado", false);
-            return ResponseEntity.status(401).body(error);
+            return ResponseEntity.status(401).body(Map.of("error", "Email o contraseña incorrectos"));
         }
     }
 
-    // ---- GET /api/auth/me ----
-    // Devuelve info del usuario actualmente autenticado
-    @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
-
-        Map<String, Object> info = new HashMap<>();
-        info.put("username", authentication.getName());
-        info.put("rol", authentication.getAuthorities().iterator().next().getAuthority());
-        info.put("autenticado", true);
-
-        return ResponseEntity.ok(info);
-    }
-
-    // ---- GET /api/auth/ping ----
-    // Endpoint de prueba para saber si el backend está vivo
+    @Operation(summary = "Health check")
     @GetMapping("/ping")
-    public ResponseEntity<Map<String, String>> ping() {
-        Map<String, String> r = new HashMap<>();
-        r.put("estado", "OK");
-        r.put("mensaje", "CarpinChill backend funcionando correctamente");
-        return ResponseEntity.ok(r);
+    public ResponseEntity<?> ping() {
+        return ResponseEntity.ok(Map.of("estado", "OK", "mensaje", "CarpinChill backend funcionando"));
+    }
+
+    @Operation(summary = "Info del usuario autenticado")
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Authentication auth) {
+        if (auth == null) return ResponseEntity.status(401).build();
+        Usuario usuario = usuarioService.findByEmail(auth.getName());
+        return ResponseEntity.ok(Map.of(
+            "id", usuario.getId(),
+            "nombre", usuario.getNombre(),
+            "email", usuario.getEmail(),
+            "rol", usuario.getRol()
+        ));
     }
 }
