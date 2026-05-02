@@ -1,104 +1,69 @@
 package com.carpinchill.service;
 
-import com.carpinchill.model.Viaje;
-import com.carpinchill.repository.ViajeRepository;
+import com.carpinchill.dto.request.RegistroRequest;
+import com.carpinchill.model.Usuario;
+import com.carpinchill.repository.UsuarioRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-public class ViajeService {
+public class UsuarioService implements UserDetailsService {
 
-    private final ViajeRepository viajeRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public ViajeService(ViajeRepository viajeRepository) {
-        this.viajeRepository = viajeRepository;
+    public UsuarioService(UsuarioRepository usuarioRepository,
+                          PasswordEncoder passwordEncoder,
+                          EmailService emailService) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
-    public List<Viaje> obtenerTodos() {
-        return viajeRepository.findAll();
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+
+        return new User(
+                usuario.getEmail(),
+                usuario.getPasswordHash(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()))
+        );
     }
 
-    public List<Viaje> obtenerActivos() {
-        return viajeRepository.findAll().stream()
-                .filter(Viaje::getActivo).collect(Collectors.toList());
-    }
-
-    /**
-     * Búsqueda con filtros avanzados:
-     *   - pais: búsqueda parcial insensible a mayúsculas
-     *   - precioMin / precioMax: rango de precio
-     *   - plazasMin: plazas disponibles mínimas
-     *   - ordenar: "precio_asc", "precio_desc", "plazas_asc"
-     */
-    public List<Viaje> buscarConFiltros(String pais, Double precioMin, Double precioMax,
-                                         Integer plazasMin, String ordenar) {
-        List<Viaje> viajes = obtenerActivos();
-
-        if (pais != null && !pais.isBlank()) {
-            viajes = viajes.stream()
-                    .filter(v -> v.getPais().toLowerCase().contains(pais.toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-        if (precioMin != null) {
-            viajes = viajes.stream().filter(v -> v.getPrecio() >= precioMin).collect(Collectors.toList());
-        }
-        if (precioMax != null) {
-            viajes = viajes.stream().filter(v -> v.getPrecio() <= precioMax).collect(Collectors.toList());
-        }
-        if (plazasMin != null) {
-            viajes = viajes.stream().filter(v -> v.getPlazasDisponibles() >= plazasMin).collect(Collectors.toList());
-        }
-        if (ordenar != null) {
-            viajes = switch (ordenar) {
-                case "precio_asc" -> viajes.stream().sorted(Comparator.comparing(Viaje::getPrecio)).collect(Collectors.toList());
-                case "precio_desc" -> viajes.stream().sorted(Comparator.comparing(Viaje::getPrecio).reversed()).collect(Collectors.toList());
-                case "plazas_asc" -> viajes.stream().sorted(Comparator.comparing(Viaje::getPlazasDisponibles)).collect(Collectors.toList());
-                default -> viajes;
-            };
+    public Usuario registrar(RegistroRequest request) {
+        if (usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Ya existe una cuenta con ese email");
         }
 
-        return viajes;
+        Usuario usuario = new Usuario();
+        usuario.setNombre(request.getNombre());
+        usuario.setApellidos(request.getApellidos());
+        usuario.setEmail(request.getEmail());
+        usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        usuario.setRol(Usuario.Rol.CLIENTE);
+
+        Usuario guardado = usuarioRepository.save(usuario);
+        emailService.enviarBienvenida(guardado);
+
+        return guardado;
     }
 
-    public Viaje obtenerPorId(Long id) {
-        return viajeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Viaje no encontrado con id: " + id));
+    public Usuario findByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
-    public Viaje crear(Viaje viaje) {
-        viaje.setActivo(true);
-        if (viaje.getPlazasDisponibles() == null) viaje.setPlazasDisponibles(viaje.getPlazasTotales());
-        return viajeRepository.save(viaje);
-    }
-
-    public Viaje actualizar(Long id, Viaje datos) {
-        Viaje existente = obtenerPorId(id);
-        existente.setTitulo(datos.getTitulo());
-        existente.setDescripcion(datos.getDescripcion());
-        existente.setDestino(datos.getDestino());
-        existente.setPais(datos.getPais());
-        existente.setLatitud(datos.getLatitud());
-        existente.setLongitud(datos.getLongitud());
-        existente.setPrecio(datos.getPrecio());
-        existente.setFechaInicio(datos.getFechaInicio());
-        existente.setFechaFin(datos.getFechaFin());
-        existente.setPlazasTotales(datos.getPlazasTotales());
-        existente.setImagenUrl(datos.getImagenUrl());
-        if (datos.getActivo() != null) existente.setActivo(datos.getActivo());
-        return viajeRepository.save(existente);
-    }
-
-    public void desactivar(Long id) {
-        Viaje v = obtenerPorId(id);
-        v.setActivo(false);
-        viajeRepository.save(v);
-    }
-
-    public void eliminar(Long id) {
-        obtenerPorId(id);
-        viajeRepository.deleteById(id);
+    public List<Usuario> findAll() {
+        return usuarioRepository.findAll();
     }
 }
