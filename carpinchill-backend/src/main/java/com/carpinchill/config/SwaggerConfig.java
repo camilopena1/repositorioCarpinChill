@@ -26,10 +26,11 @@ public class SwaggerConfig {
                 .title("CarpinChill API")
                 .description(
                     "API REST del sistema de gestión de agencia de viajes CarpinChill. " +
-                    "Permite gestionar viajes, reservas y autenticación de usuarios con control de acceso por roles. " +
-                    "Desarrollado con Spring Boot 3 + Spring Security + H2."
+                    "Permite gestionar viajes, reservas, clientes y comentarios con autenticación JWT y control de acceso por roles. " +
+                    "Incluye integración con OpenWeatherMap para información meteorológica y rate limiting con Bucket4j. " +
+                    "Desarrollado con Spring Boot 3 + Spring Security + JWT + PostgreSQL."
                 )
-                .version("1.0.0 — Entrega 3")
+                .version("2.0.0 — Entrega 4")
                 .contact(new Contact()
                     .name("Equipo CarpinChill")
                     .email("carpinchill@ies-juandelacierva.es"))
