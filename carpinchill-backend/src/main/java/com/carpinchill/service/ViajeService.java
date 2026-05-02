@@ -4,111 +4,94 @@ import com.carpinchill.model.Viaje;
 import com.carpinchill.repository.ViajeRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-/**
- * Capa de servicio para Viaje.
- * Aquí va la lógica de negocio (validaciones, reglas, etc.).
- * El controller nunca toca el repositorio directamente.
- */
 @Service
 public class ViajeService {
 
     private final ViajeRepository viajeRepository;
 
-    // Inyección de dependencias por constructor (recomendado sobre @Autowired)
     public ViajeService(ViajeRepository viajeRepository) {
         this.viajeRepository = viajeRepository;
     }
 
-    /**
-     * Devuelve todos los viajes (activos e inactivos).
-     * Solo el admin debería usar este método.
-     */
     public List<Viaje> obtenerTodos() {
         return viajeRepository.findAll();
     }
 
-    /**
-     * Devuelve solo viajes activos (para el catálogo público).
-     */
     public List<Viaje> obtenerActivos() {
-        return viajeRepository.findByActivoTrue();
+        return viajeRepository.findAll().stream()
+                .filter(Viaje::getActivo).collect(Collectors.toList());
     }
 
-    /**
-     * Busca un viaje por su ID.
-     * Lanza excepción si no existe.
-     */
+    public List<Viaje> buscarConFiltros(String pais, Double precioMin, Double precioMax,
+                                         Integer plazasMin, String ordenar) {
+        List<Viaje> viajes = obtenerActivos();
+
+        if (pais != null && !pais.isBlank()) {
+            viajes = viajes.stream()
+                    .filter(v -> v.getPais().toLowerCase().contains(pais.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+        if (precioMin != null) {
+            viajes = viajes.stream().filter(v -> v.getPrecio() >= precioMin).collect(Collectors.toList());
+        }
+        if (precioMax != null) {
+            viajes = viajes.stream().filter(v -> v.getPrecio() <= precioMax).collect(Collectors.toList());
+        }
+        if (plazasMin != null) {
+            viajes = viajes.stream().filter(v -> v.getPlazasDisponibles() >= plazasMin).collect(Collectors.toList());
+        }
+        if (ordenar != null) {
+            viajes = switch (ordenar) {
+                case "precio_asc" -> viajes.stream().sorted(Comparator.comparing(Viaje::getPrecio)).collect(Collectors.toList());
+                case "precio_desc" -> viajes.stream().sorted(Comparator.comparing(Viaje::getPrecio).reversed()).collect(Collectors.toList());
+                case "plazas_asc" -> viajes.stream().sorted(Comparator.comparing(Viaje::getPlazasDisponibles)).collect(Collectors.toList());
+                default -> viajes;
+            };
+        }
+
+        return viajes;
+    }
+
     public Viaje obtenerPorId(Long id) {
         return viajeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Viaje no encontrado con id: " + id));
     }
 
-    /**
-     * Crea un nuevo viaje y lo guarda en BD.
-     */
     public Viaje crear(Viaje viaje) {
-        viaje.setActivo(true); // siempre activo al crear
+        viaje.setActivo(true);
+        if (viaje.getPlazasDisponibles() == null) viaje.setPlazasDisponibles(viaje.getPlazasTotales());
         return viajeRepository.save(viaje);
     }
 
-    /**
-     * Actualiza un viaje existente.
-     * Busca el viaje, actualiza sus campos y guarda.
-     */
-    public Viaje actualizar(Long id, Viaje datosNuevos) {
-        Viaje viaje = obtenerPorId(id); // lanza excepción si no existe
-
-        viaje.setTitulo(datosNuevos.getTitulo());
-        viaje.setDescripcion(datosNuevos.getDescripcion());
-        viaje.setDestino(datosNuevos.getDestino());
-        viaje.setPais(datosNuevos.getPais());
-        viaje.setLatitud(datosNuevos.getLatitud());
-        viaje.setLongitud(datosNuevos.getLongitud());
-        viaje.setPrecio(datosNuevos.getPrecio());
-        viaje.setFechaInicio(datosNuevos.getFechaInicio());
-        viaje.setFechaFin(datosNuevos.getFechaFin());
-        viaje.setPlazasTotales(datosNuevos.getPlazasTotales());
-        viaje.setPlazasDisponibles(datosNuevos.getPlazasDisponibles());
-        viaje.setImagenUrl(datosNuevos.getImagenUrl());
-
-        return viajeRepository.save(viaje);
+    public Viaje actualizar(Long id, Viaje datos) {
+        Viaje existente = obtenerPorId(id);
+        existente.setTitulo(datos.getTitulo());
+        existente.setDescripcion(datos.getDescripcion());
+        existente.setDestino(datos.getDestino());
+        existente.setPais(datos.getPais());
+        existente.setLatitud(datos.getLatitud());
+        existente.setLongitud(datos.getLongitud());
+        existente.setPrecio(datos.getPrecio());
+        existente.setFechaInicio(datos.getFechaInicio());
+        existente.setFechaFin(datos.getFechaFin());
+        existente.setPlazasTotales(datos.getPlazasTotales());
+        existente.setImagenUrl(datos.getImagenUrl());
+        if (datos.getActivo() != null) existente.setActivo(datos.getActivo());
+        return viajeRepository.save(existente);
     }
 
-    /**
-     * Baja lógica: marca el viaje como inactivo (no lo borra de BD).
-     * Esto es mejor práctica que borrar físicamente.
-     */
     public void desactivar(Long id) {
-        Viaje viaje = obtenerPorId(id);
-        viaje.setActivo(false);
-        viajeRepository.save(viaje);
+        Viaje v = obtenerPorId(id);
+        v.setActivo(false);
+        viajeRepository.save(v);
     }
 
-    /**
-     * Baja física: elimina el viaje de la BD.
-     * Usar con cuidado.
-     */
     public void eliminar(Long id) {
-        if (!viajeRepository.existsById(id)) {
-            throw new RuntimeException("Viaje no encontrado con id: " + id);
-        }
+        obtenerPorId(id);
         viajeRepository.deleteById(id);
-    }
-
-    /**
-     * Filtra viajes por país.
-     */
-    public List<Viaje> buscarPorPais(String pais) {
-        return viajeRepository.findByPaisContainingIgnoreCase(pais);
-    }
-
-    /**
-     * Filtra viajes por precio máximo.
-     */
-    public List<Viaje> buscarPorPrecioMaximo(Double precioMax) {
-        return viajeRepository.findByPrecioLessThanEqual(precioMax);
     }
 }
