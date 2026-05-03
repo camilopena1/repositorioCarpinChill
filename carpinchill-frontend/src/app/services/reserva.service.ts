@@ -1,44 +1,57 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
+
+export interface ReservaRequest {
+  viajeId: number;
+  numPersonas: number;
+  notas?: string;
+}
 
 export interface ReservaResponse {
   id: number;
-  estado: string;
-  fechaReserva: string;
+  usuarioId: number;
+  nombreUsuario: string;
+  viajeId: number;
   tituloViaje: string;
+  fechaReserva: string;
   numPersonas: number;
   precioTotal: number;
+  estado: string;
   notas?: string;
-  viajeId: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ReservaService {
 
-  getMisReservas(): Observable<ReservaResponse[]> {
-  return of([
-    {
-      id: 1,
-      estado: 'CONFIRMADA',
-      fechaReserva: new Date().toISOString(),
-      tituloViaje: 'Viaje a París',
-      numPersonas: 2,
-      precioTotal: 500,
-      notas: 'Asiento ventana',
-      viajeId: 1
-    }
-  ]);
-}
+  private apiUrl = `${environment.apiUrl}/reservas`;
 
-  crearReserva(data: any): Observable<any> {
-    console.log('Reserva creada:', data);
-    return of({ ok: true });
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
+  private get headers() {
+    const token = this.authService.getToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
-  cancelarReserva(id: number): Observable<any> {
-    console.log('Reserva cancelada:', id);
-    return of({ ok: true });
+  crearReserva(reserva: ReservaRequest): Observable<ReservaResponse> {
+    return this.http.post<ReservaResponse>(this.apiUrl, reserva, { headers: this.headers });
+  }
+
+  getMisReservas(): Observable<ReservaResponse[]> {
+    return this.http.get<ReservaResponse[]>(`${this.apiUrl}/mis-reservas`, { headers: this.headers });
+  }
+
+  getTodasLasReservas(): Observable<ReservaResponse[]> {
+    return this.http.get<ReservaResponse[]>(this.apiUrl, { headers: this.headers });
+  }
+
+  confirmarReserva(id: number): Observable<ReservaResponse> {
+    return this.http.patch<ReservaResponse>(`${this.apiUrl}/${id}/confirmar`, {}, { headers: this.headers });
+  }
+
+  cancelarReserva(id: number): Observable<ReservaResponse> {
+    return this.http.patch<ReservaResponse>(`${this.apiUrl}/${id}/cancelar`, {}, { headers: this.headers });
   }
 }

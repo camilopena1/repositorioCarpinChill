@@ -1,17 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ClimaService {
 
-getClima(lat: number, lon: number): Observable<any> {
-  return of({
-    temperatura: 25,
-    descripcion: 'Soleado',
-    humedad: 50,
-    viento: 10
-  });
-}
+  private apiUrl = `${environment.apiUrl}/clima`;
+
+  constructor(private http: HttpClient) {}
+
+  getClima(lat: number, lon: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}?lat=${lat}&lon=${lon}`);
+  }
 }
