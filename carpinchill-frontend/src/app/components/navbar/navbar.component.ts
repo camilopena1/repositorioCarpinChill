@@ -118,7 +118,7 @@ export class NavbarComponent {
   }
 
   getNombreUsuario(): string {
-    return this.authService.getUsuarioActual()?.username || '';
+    return this.authService.getUsuarioActual()?.nombre || '';
   }
 
   getRol(): string {

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
@@ -30,9 +30,11 @@ export class ReservaService {
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  private get headers() {
+  private get headers(): HttpHeaders {
     const token = this.authService.getToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    return token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
   }
 
   crearReserva(reserva: ReservaRequest): Observable<ReservaResponse> {

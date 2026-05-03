@@ -8,16 +8,6 @@ import { ReservaService } from '../../services/reserva.service';
 import { ClimaService } from '../../services/clima.service';
 import { Viaje } from '../../models/viaje.model';
 
-/**
- * Componente de detalle de viaje actualizado en entrega 4.
- *
- * Novedades:
- *   - Mapa Leaflet funcional con marcador (RF-06)
- *   - Formulario de reserva conectado al backend (RF-04)
- *   - Widget de clima via OpenWeatherMap (RF-07)
- *
- * Rama: feature/leaflet-clima-reservas
- */
 @Component({
   selector: 'app-detalle-viaje',
   standalone: true,
@@ -285,7 +275,6 @@ export class DetalleViajeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.reservando = true;
     this.errorReserva = '';
     this.reservaService.crearReserva({
-      usuarioId: 1,
       viajeId: this.viaje.id,
       numPersonas: this.numPersonas,
       notas: this.notas
