@@ -4,17 +4,16 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ViajesService } from '../../services/viajes.service';
 import { Viaje } from '../../models/viaje.model';
+import { SplashComponent } from '../splash/splash.component';
 
-/**
- * Componente principal: catálogo de viajes.
- * Llama a GET /api/viajes del backend y muestra los resultados en tarjetas.
- * Incluye filtros por país y precio máximo.
- */
 @Component({
   selector: 'app-lista-viajes',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, SplashComponent],
   template: `
+    <!-- Splash solo la primera vez por sesión -->
+    <app-splash *ngIf="mostrarSplash" (done)="mostrarSplash = false"></app-splash>
+
     <div class="pagina-viajes">
 
       <!-- Cabecera -->
@@ -27,21 +26,11 @@ import { Viaje } from '../../models/viaje.model';
       <div class="filtros">
         <div class="filtro-grupo">
           <label>País</label>
-          <input
-            type="text"
-            [(ngModel)]="filtroPais"
-            placeholder="Ej: Francia"
-            (input)="filtrar()"
-          />
+          <input type="text" [(ngModel)]="filtroPais" placeholder="Ej: Francia" (input)="filtrar()" />
         </div>
         <div class="filtro-grupo">
           <label>Precio máximo (€)</label>
-          <input
-            type="number"
-            [(ngModel)]="filtroPrecio"
-            placeholder="Ej: 1000"
-            (input)="filtrar()"
-          />
+          <input type="number" [(ngModel)]="filtroPrecio" placeholder="Ej: 1000" (input)="filtrar()" />
         </div>
         <button class="btn-limpiar" (click)="limpiarFiltros()">✕ Limpiar</button>
       </div>
@@ -67,8 +56,6 @@ import { Viaje } from '../../models/viaje.model';
       <!-- Grid de tarjetas -->
       <div *ngIf="!cargando && !error" class="grid-viajes">
         <div *ngFor="let viaje of viajesFiltrados" class="tarjeta-viaje">
-
-          <!-- Imagen -->
           <div class="tarjeta-imagen">
             <img
               [src]="viaje.imagenUrl || 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400'"
@@ -77,18 +64,14 @@ import { Viaje } from '../../models/viaje.model';
             />
             <span class="badge-pais">{{ viaje.pais }}</span>
           </div>
-
-          <!-- Contenido -->
           <div class="tarjeta-contenido">
             <h3>{{ viaje.titulo }}</h3>
             <p class="destino">📍 {{ viaje.destino }}, {{ viaje.pais }}</p>
             <p class="descripcion">{{ viaje.descripcion }}</p>
-
             <div class="tarjeta-fechas" *ngIf="viaje.fechaInicio">
               <span>📅 {{ viaje.fechaInicio | date:'dd/MM/yyyy' }}</span>
               <span> → {{ viaje.fechaFin | date:'dd/MM/yyyy' }}</span>
             </div>
-
             <div class="tarjeta-pie">
               <div class="precio-plazas">
                 <span class="precio">{{ viaje.precio | currency:'EUR':'symbol':'1.0-0' }}</span>
@@ -102,7 +85,6 @@ import { Viaje } from '../../models/viaje.model';
         </div>
       </div>
 
-      <!-- Contador de resultados -->
       <p *ngIf="!cargando && !error && viajesFiltrados.length > 0" class="contador">
         Mostrando {{ viajesFiltrados.length }} de {{ viajes.length }} viajes
       </p>
@@ -111,211 +93,41 @@ import { Viaje } from '../../models/viaje.model';
   `,
   styles: [`
     .pagina-viajes { padding: 16px 0; }
-
-    .cabecera {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .cabecera h1 {
-      font-size: 32px;
-      color: #1B4F72;
-      margin: 0 0 8px;
-    }
-    .cabecera p {
-      color: #666;
-      font-size: 16px;
-    }
-
-    .filtros {
-      display: flex;
-      gap: 16px;
-      align-items: flex-end;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      background: #f8f9fa;
-      padding: 16px;
-      border-radius: 12px;
-    }
-    .filtro-grupo {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .filtro-grupo label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #555;
-    }
-    .filtro-grupo input {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 14px;
-      width: 180px;
-    }
-    .btn-limpiar {
-      padding: 8px 16px;
-      background: transparent;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #666;
-      font-size: 13px;
-    }
+    .cabecera { text-align: center; margin-bottom: 32px; }
+    .cabecera h1 { font-size: 32px; color: #1B4F72; margin: 0 0 8px; }
+    .cabecera p { color: #666; font-size: 16px; }
+    .filtros { display: flex; gap: 16px; align-items: flex-end; margin-bottom: 28px; flex-wrap: wrap; background: #f8f9fa; padding: 16px; border-radius: 12px; }
+    .filtro-grupo { display: flex; flex-direction: column; gap: 4px; }
+    .filtro-grupo label { font-size: 13px; font-weight: 600; color: #555; }
+    .filtro-grupo input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; width: 180px; }
+    .btn-limpiar { padding: 8px 16px; background: transparent; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; color: #666; font-size: 13px; }
     .btn-limpiar:hover { background: #eee; }
-
-    .grid-viajes {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 24px;
-    }
-
-    .tarjeta-viaje {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .tarjeta-viaje:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    }
-
-    .tarjeta-imagen {
-      position: relative;
-      height: 200px;
-      overflow: hidden;
-    }
-    .tarjeta-imagen img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .badge-pais {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(27,79,114,0.85);
-      color: white;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .tarjeta-contenido {
-      padding: 16px;
-    }
-    .tarjeta-contenido h3 {
-      margin: 0 0 6px;
-      font-size: 18px;
-      color: #1B4F72;
-    }
-    .destino {
-      color: #666;
-      font-size: 13px;
-      margin: 0 0 8px;
-    }
-    .descripcion {
-      color: #444;
-      font-size: 14px;
-      line-height: 1.5;
-      margin: 0 0 12px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .tarjeta-fechas {
-      font-size: 13px;
-      color: #555;
-      margin-bottom: 12px;
-    }
-
-    .tarjeta-pie {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 12px;
-      border-top: 1px solid #eee;
-    }
-    .precio-plazas {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .precio {
-      font-size: 22px;
-      font-weight: bold;
-      color: #1B4F72;
-    }
-    .plazas {
-      font-size: 12px;
-      color: #4CAF50;
-    }
-    .pocas-plazas {
-      color: #e74c3c;
-      font-weight: 600;
-    }
-    .btn-ver {
-      background: #1B4F72;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
+    .grid-viajes { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+    .tarjeta-viaje { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s; }
+    .tarjeta-viaje:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .tarjeta-imagen { position: relative; height: 200px; overflow: hidden; }
+    .tarjeta-imagen img { width: 100%; height: 100%; object-fit: cover; }
+    .badge-pais { position: absolute; top: 12px; right: 12px; background: rgba(27,79,114,0.85); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .tarjeta-contenido { padding: 16px; }
+    .tarjeta-contenido h3 { margin: 0 0 6px; font-size: 18px; color: #1B4F72; }
+    .destino { color: #666; font-size: 13px; margin: 0 0 8px; }
+    .descripcion { color: #444; font-size: 14px; line-height: 1.5; margin: 0 0 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .tarjeta-fechas { font-size: 13px; color: #555; margin-bottom: 12px; }
+    .tarjeta-pie { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid #eee; }
+    .precio-plazas { display: flex; flex-direction: column; gap: 2px; }
+    .precio { font-size: 22px; font-weight: bold; color: #1B4F72; }
+    .plazas { font-size: 12px; color: #4CAF50; }
+    .pocas-plazas { color: #e74c3c; font-weight: 600; }
+    .btn-ver { background: #1B4F72; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; transition: background 0.2s; }
     .btn-ver:hover { background: #154360; }
-
-    .estado-carga {
-      text-align: center;
-      padding: 60px;
-      color: #666;
-    }
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #f0f0f0;
-      border-top-color: #1B4F72;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
-    }
+    .estado-carga { text-align: center; padding: 60px; color: #666; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #f0f0f0; border-top-color: #1B4F72; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .estado-error {
-      text-align: center;
-      padding: 40px;
-      background: #fef3f3;
-      border-radius: 12px;
-      color: #c0392b;
-    }
+    .estado-error { text-align: center; padding: 40px; background: #fef3f3; border-radius: 12px; color: #c0392b; }
     .error-detalle { font-size: 13px; color: #888; }
-    .btn-reintentar {
-      margin-top: 12px;
-      padding: 8px 20px;
-      background: #1B4F72;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .sin-resultados {
-      text-align: center;
-      padding: 60px;
-      color: #888;
-      font-size: 16px;
-    }
-
-    .contador {
-      text-align: center;
-      margin-top: 24px;
-      color: #888;
-      font-size: 13px;
-    }
+    .btn-reintentar { margin-top: 12px; padding: 8px 20px; background: #1B4F72; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    .sin-resultados { text-align: center; padding: 60px; color: #888; font-size: 16px; }
+    .contador { text-align: center; margin-top: 24px; color: #888; font-size: 13px; }
   `]
 })
 export class ListaViajesComponent implements OnInit {
@@ -324,41 +136,33 @@ export class ListaViajesComponent implements OnInit {
   viajesFiltrados: Viaje[] = [];
   cargando = true;
   error = false;
-
   filtroPais = '';
   filtroPrecio: number | null = null;
+
+  // Splash: solo la primera vez por sesión
+  mostrarSplash = !sessionStorage.getItem('splash_visto');
 
   constructor(private viajesService: ViajesService) {}
 
   ngOnInit(): void {
+    // Marcar como visto para que no salga de nuevo en esta sesión
+    sessionStorage.setItem('splash_visto', '1');
     this.cargarViajes();
   }
 
   cargarViajes(): void {
     this.cargando = true;
     this.error = false;
-
-    // Llama al backend de Brandon: GET http://localhost:8080/api/viajes
     this.viajesService.getViajes().subscribe({
-      next: (viajes) => {
-        this.viajes = viajes;
-        this.viajesFiltrados = viajes;
-        this.cargando = false;
-      },
-      error: (err) => {
-        console.error('Error al cargar viajes:', err);
-        this.error = true;
-        this.cargando = false;
-      }
+      next: (viajes) => { this.viajes = viajes; this.viajesFiltrados = viajes; this.cargando = false; },
+      error: (err) => { console.error('Error al cargar viajes:', err); this.error = true; this.cargando = false; }
     });
   }
 
   filtrar(): void {
     this.viajesFiltrados = this.viajes.filter(v => {
-      const coincidePais = !this.filtroPais ||
-        v.pais.toLowerCase().includes(this.filtroPais.toLowerCase());
-      const coincidePrecio = !this.filtroPrecio ||
-        v.precio <= this.filtroPrecio;
+      const coincidePais = !this.filtroPais || v.pais.toLowerCase().includes(this.filtroPais.toLowerCase());
+      const coincidePrecio = !this.filtroPrecio || v.precio <= this.filtroPrecio;
       return coincidePais && coincidePrecio;
     });
   }
@@ -370,7 +174,6 @@ export class ListaViajesComponent implements OnInit {
   }
 
   onImageError(event: Event): void {
-    (event.target as HTMLImageElement).src =
-      'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400';
+    (event.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400';
   }
 }

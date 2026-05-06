@@ -55,13 +55,16 @@ export class AuthService {
     return !!this.getToken() && !!this.getUsuarioActual();
   }
 
+  // El backend devuelve el rol sin prefijo: 'ADMIN', 'AGENTE', 'CLIENTE'
+  // Soportamos ambos formatos por si acaso
   esAdmin(): boolean {
-    return this.getUsuarioActual()?.rol === 'ROLE_ADMIN';
+    const rol = this.getUsuarioActual()?.rol;
+    return rol === 'ADMIN' || rol === 'ROLE_ADMIN';
   }
 
   esAdminOAgente(): boolean {
     const rol = this.getUsuarioActual()?.rol;
-    return rol === 'ROLE_ADMIN' || rol === 'ROLE_AGENTE';
+    return rol === 'ADMIN' || rol === 'AGENTE' || rol === 'ROLE_ADMIN' || rol === 'ROLE_AGENTE';
   }
 
   getUsuarioId(): number | null {

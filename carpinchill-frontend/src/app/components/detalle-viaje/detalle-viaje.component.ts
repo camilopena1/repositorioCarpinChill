@@ -6,6 +6,7 @@ import { ViajesService } from '../../services/viajes.service';
 import { AuthService } from '../../services/auth.service';
 import { ReservaService } from '../../services/reserva.service';
 import { ClimaService } from '../../services/clima.service';
+import { ComentarioService, Comentario } from '../../services/comentario.service';
 import { Viaje } from '../../models/viaje.model';
 
 @Component({
@@ -54,6 +55,12 @@ import { Viaje } from '../../models/viaje.model';
               {{ viaje.plazasDisponibles }} / {{ viaje.plazasTotales }}
             </span>
           </div>
+          <div class="info-card" *ngIf="mediaValoracion !== null">
+            <span class="lbl">⭐ Valoración media</span>
+            <span class="val">{{ mediaValoracion | number:'1.1-1' }} / 5
+              <small>({{ comentarios.length }} reseña{{ comentarios.length !== 1 ? 's' : '' }})</small>
+            </span>
+          </div>
           <div class="info-card clima-card" *ngIf="clima">
             <span class="lbl">🌤️ Clima en {{ viaje.destino }}</span>
             <span class="val">{{ clima.temperatura | number:'1.0-0' }}°C — {{ clima.descripcion }}</span>
@@ -70,14 +77,14 @@ import { Viaje } from '../../models/viaje.model';
           <p>{{ viaje.descripcion }}</p>
         </div>
 
-        <!-- Mapa Leaflet (RF-06) -->
+        <!-- Mapa Leaflet -->
         <div class="seccion" *ngIf="viaje.latitud && viaje.longitud">
           <h2>📍 Ubicación del destino</h2>
           <p class="sub">Mapa interactivo — OpenStreetMap + Leaflet</p>
           <div id="mapa" class="mapa"></div>
         </div>
 
-        <!-- Formulario de reserva (RF-04) -->
+        <!-- Formulario de reserva -->
         <div class="seccion reserva-sec">
           <h2>✈️ Reservar este viaje</h2>
 
@@ -124,6 +131,71 @@ import { Viaje } from '../../models/viaje.model';
           </div>
         </div>
 
+        <!-- ===== SECCIÓN DE COMENTARIOS Y VALORACIONES ===== -->
+        <div class="seccion comentarios-sec">
+          <h2>💬 Opiniones de viajeros</h2>
+
+          <!-- Formulario para añadir comentario (solo autenticados) -->
+          <div *ngIf="estaAutenticado() && !comentarioEnviado" class="form-comentario">
+            <h3>Deja tu valoración</h3>
+            <div class="campo">
+              <label>Puntuación</label>
+              <div class="estrellas-input">
+                <button *ngFor="let s of [1,2,3,4,5]"
+                        class="estrella-btn"
+                        [class.activa]="nuevaValoracion >= s"
+                        (click)="nuevaValoracion = s">★</button>
+                <span class="estrella-label" *ngIf="nuevaValoracion > 0">{{ nuevaValoracion }}/5</span>
+              </div>
+            </div>
+            <div class="campo">
+              <label>Comentario (opcional)</label>
+              <textarea [(ngModel)]="nuevoComentario" rows="3"
+                        placeholder="Comparte tu experiencia con este viaje..."></textarea>
+            </div>
+            <div *ngIf="errorComentario" class="error-reserva">⚠️ {{ errorComentario }}</div>
+            <button class="btn-comentar" (click)="enviarComentario()" [disabled]="enviandoComentario || nuevaValoracion === 0">
+              {{ enviandoComentario ? 'Enviando...' : '📝 Publicar opinión' }}
+            </button>
+          </div>
+
+          <div *ngIf="comentarioEnviado" class="comentario-ok">
+            ✅ ¡Gracias por tu opinión!
+          </div>
+
+          <div *ngIf="!estaAutenticado()" class="reserva-login" style="margin-top:12px">
+            <p>Inicia sesión para dejar una valoración.</p>
+          </div>
+
+          <!-- Lista de comentarios -->
+          <div *ngIf="cargandoComentarios" class="estado-carga" style="padding:24px">
+            <div class="spinner"></div>
+          </div>
+
+          <div *ngIf="!cargandoComentarios && comentarios.length === 0" class="sin-comentarios">
+            <p>Aún no hay opiniones para este viaje. ¡Sé el primero!</p>
+          </div>
+
+          <div class="lista-comentarios" *ngIf="!cargandoComentarios && comentarios.length > 0">
+            <div *ngFor="let c of comentarios" class="comentario-card">
+              <div class="comentario-header">
+                <div class="comentario-autor">
+                  <div class="avatar">{{ getIniciales(c) }}</div>
+                  <span class="nombre-autor">{{ c.usuario?.nombre || 'Usuario' }}</span>
+                </div>
+                <div class="comentario-meta">
+                  <div class="estrellas">
+                    <span *ngFor="let s of getEstrellas(c.valoracion)" [class.llena]="s">★</span>
+                  </div>
+                  <span class="fecha-comentario">{{ c.fechaComentario | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+              <p class="comentario-texto" *ngIf="c.comentario">{{ c.comentario }}</p>
+            </div>
+          </div>
+        </div>
+        <!-- ===== FIN SECCIÓN COMENTARIOS ===== -->
+
       </div>
     </div>
   `,
@@ -157,7 +229,7 @@ import { Viaje } from '../../models/viaje.model';
     .campo { margin-bottom: 16px; }
     .campo label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
     .campo small { color: #888; font-size: 12px; display: block; margin-top: 4px; }
-    .campo textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 7px; font-size: 14px; resize: vertical; font-family: inherit; }
+    .campo textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 7px; font-size: 14px; resize: vertical; font-family: inherit; box-sizing: border-box; }
     .personas { display: flex; align-items: center; gap: 14px; }
     .personas button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #1B4F72; background: white; color: #1B4F72; font-size: 18px; cursor: pointer; }
     .personas button:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -178,6 +250,32 @@ import { Viaje } from '../../models/viaje.model';
     .estado-carga, .estado-error { text-align: center; padding: 50px; color: #666; }
     .spinner { width: 32px; height: 32px; border: 4px solid #f0f0f0; border-top-color: #1B4F72; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Comentarios */
+    .comentarios-sec { background: #f8f9fa; border-radius: 14px; padding: 22px; }
+    .form-comentario { background: white; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e8e8e8; }
+    .form-comentario h3 { margin: 0 0 14px; font-size: 15px; color: #1B4F72; }
+    .estrellas-input { display: flex; align-items: center; gap: 6px; }
+    .estrella-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #ddd; transition: color 0.15s; padding: 0; line-height: 1; }
+    .estrella-btn.activa { color: #f39c12; }
+    .estrella-btn:hover { color: #f39c12; }
+    .estrella-label { font-size: 13px; color: #888; margin-left: 4px; }
+    .btn-comentar { padding: 10px 22px; background: #1B4F72; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-comentar:disabled { background: #aaa; cursor: not-allowed; }
+    .comentario-ok { background: #d5f5e3; color: #1e8449; padding: 12px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 16px; }
+    .sin-comentarios { text-align: center; padding: 28px; color: #aaa; font-size: 14px; }
+    .lista-comentarios { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+    .comentario-card { background: white; border-radius: 10px; padding: 16px; border: 1px solid #e8e8e8; }
+    .comentario-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+    .comentario-autor { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: #1B4F72; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+    .nombre-autor { font-weight: 600; color: #333; font-size: 14px; }
+    .comentario-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+    .estrellas { color: #ddd; font-size: 16px; letter-spacing: 1px; }
+    .estrellas .llena { color: #f39c12; }
+    .fecha-comentario { font-size: 11px; color: #aaa; }
+    .comentario-texto { color: #555; font-size: 14px; line-height: 1.6; margin: 0; }
+
     @media (max-width: 600px) {
       .detalle-imagen { height: 200px; }
       .mapa { height: 220px; }
@@ -193,11 +291,22 @@ export class DetalleViajeComponent implements OnInit, AfterViewInit, OnDestroy {
   clima: any = null;
   cargandoClima = false;
 
+  // Reserva
   numPersonas = 1;
   notas = '';
   reservando = false;
   reservaOk = false;
   errorReserva = '';
+
+  // Comentarios
+  comentarios: Comentario[] = [];
+  cargandoComentarios = false;
+  mediaValoracion: number | null = null;
+  nuevaValoracion = 0;
+  nuevoComentario = '';
+  enviandoComentario = false;
+  comentarioEnviado = false;
+  errorComentario = '';
 
   private mapa: any = null;
 
@@ -206,7 +315,8 @@ export class DetalleViajeComponent implements OnInit, AfterViewInit, OnDestroy {
     private viajesService: ViajesService,
     private authService: AuthService,
     private reservaService: ReservaService,
-    private climaService: ClimaService
+    private climaService: ClimaService,
+    private comentarioService: ComentarioService
   ) {}
 
   ngOnInit(): void {
@@ -215,10 +325,10 @@ export class DetalleViajeComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (v) => {
         this.viaje = v;
         this.cargando = false;
-        // Cargar clima si hay coordenadas
         if (v.latitud && v.longitud) {
           this.cargarClima(v.latitud, v.longitud);
         }
+        this.cargarComentarios(id);
       },
       error: () => { this.error = true; this.cargando = false; }
     });
@@ -234,6 +344,50 @@ export class DetalleViajeComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (c) => { this.clima = c; this.cargandoClima = false; },
       error: () => { this.cargandoClima = false; }
     });
+  }
+
+  private cargarComentarios(viajeId: number): void {
+    this.cargandoComentarios = true;
+    this.comentarioService.getComentariosPorViaje(viajeId).subscribe({
+      next: (lista) => {
+        this.comentarios = lista;
+        this.cargandoComentarios = false;
+        if (lista.length > 0) {
+          const suma = lista.reduce((acc, c) => acc + c.valoracion, 0);
+          this.mediaValoracion = Math.round((suma / lista.length) * 10) / 10;
+        }
+      },
+      error: () => { this.cargandoComentarios = false; }
+    });
+  }
+
+  enviarComentario(): void {
+    if (!this.viaje?.id || this.nuevaValoracion === 0) return;
+    this.enviandoComentario = true;
+    this.errorComentario = '';
+    this.comentarioService.crearComentario(this.viaje.id, this.nuevaValoracion, this.nuevoComentario).subscribe({
+      next: (c) => {
+        this.comentarios = [c, ...this.comentarios];
+        this.comentarioEnviado = true;
+        this.enviandoComentario = false;
+        // Recalcular media
+        const suma = this.comentarios.reduce((acc, com) => acc + com.valoracion, 0);
+        this.mediaValoracion = Math.round((suma / this.comentarios.length) * 10) / 10;
+      },
+      error: (err) => {
+        this.errorComentario = typeof err.error === 'string' ? err.error : 'No se pudo publicar el comentario.';
+        this.enviandoComentario = false;
+      }
+    });
+  }
+
+  getEstrellas(valoracion: number): boolean[] {
+    return [1, 2, 3, 4, 5].map(i => i <= valoracion);
+  }
+
+  getIniciales(c: Comentario): string {
+    const nombre = c.usuario?.nombre || '?';
+    return nombre.charAt(0).toUpperCase();
   }
 
   private esperarMapa(intentos = 0): void {

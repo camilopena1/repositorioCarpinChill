@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
-
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -12,36 +11,34 @@ import { Router } from '@angular/router';
   template: `
     <nav class="navbar">
       <div class="navbar-marca">
-        <a routerLink="/viajes" class="logo">🦫 CarpinChill</a>
+        <a routerLink="/viajes" class="logo">
+          <img src="assets/carpincho-logo.png" alt="CarpinChill" class="logo-img" />
+          <span class="logo-texto">CarpinChill</span>
+        </a>
       </div>
 
       <ul class="navbar-links">
-  <li>
-    <a routerLink="/viajes" routerLinkActive="activo">Viajes</a>
-  </li>
-
-  <li>
-    <a routerLink="/registro" routerLinkActive="activo">Registrarse</a>
-  </li>
-
-  <li *ngIf="estaAutenticado()">
-    <a routerLink="/mis-reservas" routerLinkActive="activo">Mis Reservas</a>
-  </li>
-
-  <li *ngIf="estaAutenticado()">
-    <a routerLink="/admin" routerLinkActive="activo">⚙️ Admin</a>
-  </li>
-
-  <li *ngIf="!estaAutenticado()">
-    <a routerLink="/login" routerLinkActive="activo" class="btn-login">Iniciar sesión</a>
-  </li>
-
-  <li *ngIf="estaAutenticado()" class="usuario-info">
-    <span>👤 {{ getNombreUsuario() }}</span>
-    <span class="rol-badge">{{ getRol() }}</span>
-    <button (click)="cerrarSesion()" class="btn-logout">Salir</button>
-  </li>
-</ul>
+        <li>
+          <a routerLink="/viajes" routerLinkActive="activo">Viajes</a>
+        </li>
+        <li *ngIf="!estaAutenticado()">
+          <a routerLink="/registro" routerLinkActive="activo">Registrarse</a>
+        </li>
+        <li *ngIf="estaAutenticado()">
+          <a routerLink="/mis-reservas" routerLinkActive="activo">Mis Reservas</a>
+        </li>
+        <li *ngIf="esAdminOAgente()">
+          <a routerLink="/admin" routerLinkActive="activo">⚙️ Admin</a>
+        </li>
+        <li *ngIf="!estaAutenticado()">
+          <a routerLink="/login" routerLinkActive="activo" class="btn-login">Iniciar sesión</a>
+        </li>
+        <li *ngIf="estaAutenticado()" class="usuario-info">
+          <span>👤 {{ getNombreUsuario() }}</span>
+          <span class="rol-badge">{{ getRol() }}</span>
+          <button (click)="cerrarSesion()" class="btn-logout">Salir</button>
+        </li>
+      </ul>
     </nav>
   `,
   styles: [`
@@ -56,10 +53,23 @@ import { Router } from '@angular/router';
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: white;
+      padding: 2px;
+    }
+    .logo-texto {
       font-size: 20px;
       font-weight: bold;
       color: white;
-      text-decoration: none;
     }
     .navbar-links {
       display: flex;
@@ -113,22 +123,9 @@ export class NavbarComponent {
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  estaAutenticado(): boolean {
-    return this.authService.estaAutenticado();
-  }
-
-  getNombreUsuario(): string {
-    return this.authService.getUsuarioActual()?.nombre || '';
-  }
-
-  getRol(): string {
-    const rol = this.authService.getUsuarioActual()?.rol || '';
-    // Quita el prefijo ROLE_ que añade Spring Security
-    return rol.replace('ROLE_', '');
-  }
-
-  cerrarSesion(): void {
-    this.authService.logout();
-    this.router.navigate(['/viajes']);
-  }
+  estaAutenticado(): boolean { return this.authService.estaAutenticado(); }
+  esAdminOAgente(): boolean { return this.authService.esAdminOAgente(); }
+  getNombreUsuario(): string { return this.authService.getUsuarioActual()?.nombre || ''; }
+  getRol(): string { return (this.authService.getUsuarioActual()?.rol || '').replace('ROLE_', ''); }
+  cerrarSesion(): void { this.authService.logout(); this.router.navigate(['/viajes']); }
 }

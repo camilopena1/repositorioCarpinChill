@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
     <div class="login-pagina">
       <div class="login-card">
 
-        <div class="login-logo">🦫</div>
+        <img src="assets/carpincho-logo.png" alt="CarpinChill logo" class="login-logo" />
         <h1>CarpinChill</h1>
         <p class="login-subtitulo">Inicia sesión para continuar</p>
 
@@ -55,9 +55,10 @@ import { AuthService } from '../../services/auth.service';
         <div class="usuarios-prueba">
           <p>Usuarios de prueba:</p>
           <div class="prueba-chips">
-            <span (click)="rellenar('admin@carpinchill.com','admin123')">admin / admin123</span>
-            <span (click)="rellenar('agente@carpinchill.com','agente123')">agente / agente123</span>
+            <span (click)="rellenar('admin@carpinchill.com', 'admin123')">Admin</span>
+            <span (click)="rellenar('agente@carpinchill.com', 'admin123')">Agente</span>
           </div>
+          <p class="prueba-hint" *ngIf="chipUsado">✓ Datos cargados — pulsa "Iniciar sesión"</p>
         </div>
 
         <p class="registro-link">¿No tienes cuenta? <a routerLink="/registro">Regístrate</a></p>
@@ -85,7 +86,12 @@ import { AuthService } from '../../services/auth.service';
       box-shadow: 0 4px 24px rgba(0,0,0,0.1);
       text-align: center;
     }
-    .login-logo { font-size: 48px; margin-bottom: 8px; }
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 8px;
+    }
     h1 { margin: 0 0 8px; color: #1B4F72; font-size: 26px; }
     .login-subtitulo { color: #888; margin: 0 0 28px; font-size: 14px; }
     .login-error {
@@ -105,8 +111,23 @@ import { AuthService } from '../../services/auth.service';
       border-radius: 10px;
       font-size: 15px;
       transition: border-color 0.2s;
+      width: 100%;
+      box-sizing: border-box;
     }
     .campo input:focus { outline: none; border-color: #1B4F72; }
+    .password-wrapper { position: relative; }
+    .password-wrapper input { padding-right: 44px; }
+    .ojo {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0;
+    }
     .btn-entrar {
       width: 100%;
       padding: 12px;
@@ -131,13 +152,15 @@ import { AuthService } from '../../services/auth.service';
     .prueba-chips span {
       background: #EBF5FB;
       color: #1B4F72;
-      padding: 5px 12px;
+      padding: 6px 16px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 13px;
       cursor: pointer;
       transition: background 0.2s;
+      font-weight: 600;
     }
     .prueba-chips span:hover { background: #D6EAF8; }
+    .prueba-hint { color: #1e8449; font-size: 12px; margin-top: 8px !important; }
     .registro-link { color: #888; font-size: 13px; margin: 16px 0 0; }
     .registro-link a { color: #1B4F72; font-weight: 600; text-decoration: none; }
     .link-volver {
@@ -156,6 +179,8 @@ export class LoginComponent {
   password = '';
   cargando = false;
   errorMensaje = '';
+  verPassword = false;
+  chipUsado = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -163,10 +188,13 @@ export class LoginComponent {
     if (!this.email || !this.password) return;
     this.cargando = true;
     this.errorMensaje = '';
+    this.chipUsado = false;
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
         this.cargando = false;
+        // Borrar el flag para que la animación splash salga al llegar a viajes
+        sessionStorage.removeItem('splash_visto');
         this.router.navigate(['/viajes']);
       },
       error: () => {
@@ -180,5 +208,6 @@ export class LoginComponent {
     this.email = email;
     this.password = pass;
     this.errorMensaje = '';
+    this.chipUsado = true;
   }
 }
