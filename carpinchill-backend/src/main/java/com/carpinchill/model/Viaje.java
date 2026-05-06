@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Entidad Viaje refactorizada con Lombok.
  * @Data genera automáticamente getters, setters, equals, hashCode y toString.
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Entity
 @Table(name = "viaje")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Viaje {
 
     @Id
