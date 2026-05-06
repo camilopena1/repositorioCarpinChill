@@ -4,6 +4,7 @@ import com.carpinchill.model.Comentario;
 import com.carpinchill.service.ComentarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -50,6 +51,9 @@ public class ComentarioController {
             String texto = (String) body.get("comentario");
             Comentario c = comentarioService.crear(viajeId, valoracion, texto, auth.getName());
             return ResponseEntity.status(HttpStatus.CREATED).body(c);
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body("Ya has publicado una opinión para este viaje. Solo se permite una valoración por viaje.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

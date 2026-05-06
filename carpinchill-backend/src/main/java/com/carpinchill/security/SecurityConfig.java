@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -31,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity  // Activa @PreAuthorize en los controllers
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
@@ -71,12 +73,44 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authProvider())
             .authorizeHttpRequests(auth -> auth
+                // Públicos sin autenticación
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+
+                // Viajes: GET público, escritura solo ADMIN o AGENTE
                 .requestMatchers(HttpMethod.GET, "/api/viajes/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/clima/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/viajes/**").hasAnyRole("ADMIN", "AGENTE")
+                .requestMatchers(HttpMethod.PUT, "/api/viajes/**").hasAnyRole("ADMIN", "AGENTE")
+                .requestMatchers(HttpMethod.PATCH, "/api/viajes/**").hasAnyRole("ADMIN", "AGENTE")
+                .requestMatchers(HttpMethod.DELETE, "/api/viajes/**").hasRole("ADMIN")
+
+                // Comentarios: GET público, POST cualquier autenticado
                 .requestMatchers(HttpMethod.GET, "/api/comentarios/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/comentarios/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/comentarios/**").hasAnyRole("ADMIN", "AGENTE")
+
+                // Clima: público
+                .requestMatchers(HttpMethod.GET, "/api/clima/**").permitAll()
+
+                // Reservas: ver todas solo ADMIN/AGENTE, el resto autenticado
+                .requestMatchers(HttpMethod.GET, "/api/reservas/mis-reservas").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/reservas").hasAnyRole("ADMIN", "AGENTE")
+                .requestMatchers(HttpMethod.POST, "/api/reservas/**").authenticated()
+                .requestMatchers("/api/reservas/*/confirmar").hasAnyRole("ADMIN", "AGENTE")
+                .requestMatchers("/api/reservas/*/cancelar").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/reservas/**").hasRole("ADMIN")
+
+                // Clientes: solo ADMIN o AGENTE
+                .requestMatchers("/api/clientes/**").hasAnyRole("ADMIN", "AGENTE")
+
+                // Estadísticas: solo ADMIN o AGENTE
+                .requestMatchers("/api/stats/**").hasAnyRole("ADMIN", "AGENTE")
+
+                // Usuarios: solo ADMIN
+                .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+
+                // Cualquier otra petición requiere autenticación
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -90,7 +124,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
-        config.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

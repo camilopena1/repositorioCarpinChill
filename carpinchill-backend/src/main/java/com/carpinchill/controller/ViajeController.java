@@ -2,13 +2,14 @@ package com.carpinchill.controller;
 
 import com.carpinchill.dto.response.ViajeResponse;
 import com.carpinchill.model.Viaje;
-import com.carpinchill.repository.ComentarioRepository;
+import com.carpinchill.service.ComentarioService;
 import com.carpinchill.service.ViajeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,17 +21,16 @@ import java.util.List;
 public class ViajeController {
 
     private final ViajeService viajeService;
-    private final ComentarioRepository comentarioRepository;
+    private final ComentarioService comentarioService;
 
-    public ViajeController(ViajeService viajeService, ComentarioRepository comentarioRepository) {
+    public ViajeController(ViajeService viajeService, ComentarioService comentarioService) {
         this.viajeService = viajeService;
-        this.comentarioRepository = comentarioRepository;
+        this.comentarioService = comentarioService;
     }
 
     private ViajeResponse toResponse(Viaje v) {
         ViajeResponse r = ViajeResponse.from(v);
-        // Añadir valoración media de comentarios
-        Double media = comentarioRepository.calcularMediaPorViaje(v.getId());
+        Double media = comentarioService.obtenerMediaViaje(v.getId());
         r.setValoracionMedia(media != null ? Math.round(media * 10.0) / 10.0 : null);
         return r;
     }
@@ -43,13 +43,13 @@ public class ViajeController {
             @RequestParam(required = false) Double precioMin,
             @RequestParam(required = false) Integer plazasMin,
             @RequestParam(required = false) String ordenar) {
-
         List<Viaje> viajes = viajeService.buscarConFiltros(pais, precioMin, precioMax, plazasMin, ordenar);
         return ResponseEntity.ok(viajes.stream().map(this::toResponse).toList());
     }
 
-    @Operation(summary = "Todos los viajes incluyendo inactivos (admin)")
+    @Operation(summary = "Todos los viajes incluyendo inactivos (admin/agente)")
     @GetMapping("/todos")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENTE')")
     public ResponseEntity<List<ViajeResponse>> listarTodos() {
         return ResponseEntity.ok(viajeService.obtenerTodos().stream().map(this::toResponse).toList());
     }
@@ -66,12 +66,14 @@ public class ViajeController {
 
     @Operation(summary = "Crear viaje (admin/agente)")
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENTE')")
     public ResponseEntity<ViajeResponse> crear(@Valid @RequestBody Viaje viaje) {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(viajeService.crear(viaje)));
     }
 
-    @Operation(summary = "Actualizar viaje")
+    @Operation(summary = "Actualizar viaje (admin/agente)")
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENTE')")
     public ResponseEntity<ViajeResponse> actualizar(@PathVariable Long id, @Valid @RequestBody Viaje viaje) {
         try {
             return ResponseEntity.ok(toResponse(viajeService.actualizar(id, viaje)));
@@ -80,8 +82,9 @@ public class ViajeController {
         }
     }
 
-    @Operation(summary = "Desactivar viaje (baja lógica)")
+    @Operation(summary = "Desactivar viaje (admin/agente)")
     @PatchMapping("/{id}/desactivar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENTE')")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) {
         try {
             viajeService.desactivar(id);
@@ -91,8 +94,9 @@ public class ViajeController {
         }
     }
 
-    @Operation(summary = "Eliminar viaje (baja física)")
+    @Operation(summary = "Eliminar viaje (solo admin)")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         try {
             viajeService.eliminar(id);
