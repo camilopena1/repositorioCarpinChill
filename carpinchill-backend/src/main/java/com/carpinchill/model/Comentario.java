@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Entidad Comentario — Sistema de valoraciones de viajes.
  * Cada usuario puede dejar una valoración (1-5 estrellas) y
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "comentario",
        uniqueConstraints = @UniqueConstraint(columnNames = {"usuario_id", "viaje_id"}))
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Comentario {
 
     @Id
