@@ -36,6 +36,10 @@ public class ClienteService {
             .findByUsuarioNombreContainingIgnoreCaseOrUsuarioApellidosContainingIgnoreCase(termino, termino);
     }
 
+    public java.util.Optional<Cliente> obtenerPorUsuarioId(Long usuarioId) {
+        return clienteRepository.findByUsuarioId(usuarioId);
+    }
+
     public Cliente crearOActualizar(Long usuarioId, String telefono, String direccion,
                                      String dni, String fechaNacimiento, String imagenUrl, String notas) {
         Usuario usuario = usuarioService.findAll().stream()

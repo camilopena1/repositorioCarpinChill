@@ -44,6 +44,14 @@ public class ClienteController {
         }
     }
 
+    @Operation(summary = "Obtener perfil de cliente por usuarioId")
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<?> obtenerPorUsuario(@PathVariable Long usuarioId) {
+        return clienteService.obtenerPorUsuarioId(usuarioId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @Operation(summary = "Crear o actualizar perfil de cliente")
     @PutMapping("/usuario/{usuarioId}")
     public ResponseEntity<?> crearOActualizar(@PathVariable Long usuarioId,

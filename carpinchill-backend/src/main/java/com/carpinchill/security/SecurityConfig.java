@@ -101,7 +101,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/reservas/*/cancelar").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/reservas/**").hasRole("ADMIN")
 
-                // Clientes: solo ADMIN o AGENTE
+                // Clientes: GET del propio perfil para cualquier autenticado; resto solo ADMIN/AGENTE
+                .requestMatchers(HttpMethod.GET, "/api/clientes/usuario/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/clientes/usuario/**").authenticated()
                 .requestMatchers("/api/clientes/**").hasAnyRole("ADMIN", "AGENTE")
 
                 // Estadísticas: solo ADMIN o AGENTE
