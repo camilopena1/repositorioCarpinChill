@@ -42,8 +42,10 @@ public class ViajeController {
             @RequestParam(required = false) Double precioMax,
             @RequestParam(required = false) Double precioMin,
             @RequestParam(required = false) Integer plazasMin,
+            @RequestParam(required = false) Double valoracionMin,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fechaSalidaDesde,
             @RequestParam(required = false) String ordenar) {
-        List<Viaje> viajes = viajeService.buscarConFiltros(pais, precioMin, precioMax, plazasMin, ordenar);
+        List<Viaje> viajes = viajeService.buscarConFiltros(pais, precioMin, precioMax, plazasMin, valoracionMin, fechaSalidaDesde, ordenar);
         return ResponseEntity.ok(viajes.stream().map(this::toResponse).toList());
     }
 
