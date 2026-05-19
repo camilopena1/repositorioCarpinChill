@@ -27,6 +27,9 @@ import { Router } from '@angular/router';
         <li *ngIf="estaAutenticado()">
           <a routerLink="/mis-reservas" routerLinkActive="activo">Mis Reservas</a>
         </li>
+        <li *ngIf="estaAutenticado()">
+          <a routerLink="/perfil" routerLinkActive="activo">Mi Perfil</a>
+        </li>
         <li *ngIf="esAdminOAgente()">
           <a routerLink="/admin" routerLinkActive="activo">⚙️ Admin</a>
         </li>

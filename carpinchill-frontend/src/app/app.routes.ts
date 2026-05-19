@@ -29,5 +29,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/mis-reservas/mis-reservas.component').then(m => m.MisReservasComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'perfil',
+    loadComponent: () => import('./components/perfil/perfil.component').then(m => m.PerfilComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/viajes' }
 ];
