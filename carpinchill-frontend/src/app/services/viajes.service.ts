@@ -17,13 +17,23 @@ export class ViajesService {
     return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
 
-  getViajes(filtros?: {pais?: string, precioMin?: number, precioMax?: number, plazasMin?: number, ordenar?: string}): Observable<Viaje[]> {
+  getViajes(filtros?: {
+    pais?: string;
+    precioMin?: number;
+    precioMax?: number;
+    plazasMin?: number;
+    valoracionMin?: number;
+    fechaSalidaDesde?: string;
+    ordenar?: string;
+  }): Observable<Viaje[]> {
     let params = new HttpParams();
-    if (filtros?.pais) params = params.set('pais', filtros.pais);
-    if (filtros?.precioMin) params = params.set('precioMin', filtros.precioMin.toString());
-    if (filtros?.precioMax) params = params.set('precioMax', filtros.precioMax.toString());
-    if (filtros?.plazasMin) params = params.set('plazasMin', filtros.plazasMin.toString());
-    if (filtros?.ordenar) params = params.set('ordenar', filtros.ordenar);
+    if (filtros?.pais)            params = params.set('pais', filtros.pais);
+    if (filtros?.precioMin)       params = params.set('precioMin', filtros.precioMin.toString());
+    if (filtros?.precioMax)       params = params.set('precioMax', filtros.precioMax.toString());
+    if (filtros?.plazasMin)       params = params.set('plazasMin', filtros.plazasMin.toString());
+    if (filtros?.valoracionMin)   params = params.set('valoracionMin', filtros.valoracionMin.toString());
+    if (filtros?.fechaSalidaDesde) params = params.set('fechaSalidaDesde', filtros.fechaSalidaDesde);
+    if (filtros?.ordenar)         params = params.set('ordenar', filtros.ordenar);
     return this.http.get<Viaje[]>(this.apiUrl, { params });
   }
 
