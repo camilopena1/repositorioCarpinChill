@@ -1,0 +1,79 @@
+version: '3.8'
+
+# ============================================================
+# CarpinChill — Docker Compose para desarrollo local
+# ============================================================
+# Levanta los tres servicios con un solo comando:
+#   docker-compose up --build
+#
+# URLs una vez arrancado:
+#   Frontend:  http://localhost:4200
+#   Backend:   http://localhost:8080
+#   Swagger:   http://localhost:8080/swagger-ui.html
+#   PostgreSQL: localhost:5432
+# ============================================================
+
+services:
+
+  # ── Base de datos PostgreSQL ──────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: carpinchill-db
+    environment:
+      POSTGRES_DB: carpinchill
+      POSTGRES_USER: carpinchill
+      POSTGRES_PASSWORD: carpinchill123
+    ports:
+      - "5432:5432"
+    volumes:
+      # Los datos persisten entre reinicios del contenedor
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carpinchill -d carpinchill"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend Spring Boot ───────────────────────────────────
+  backend:
+    build:
+      context: ./carpinchill-backend
+      dockerfile: Dockerfile
+    container_name: carpinchill-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Base de datos: apunta al servicio 'postgres' definido arriba
+      DATABASE_URL: jdbc:postgresql://postgres:5432/carpinchill
+      DATABASE_USERNAME: carpinchill
+      DATABASE_PASSWORD: carpinchill123
+      HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      DDL_AUTO: update
+      H2_CONSOLE: "false"
+      # JWT: clave de desarrollo (cambiar en producción)
+      JWT_SECRET: carpinchill-dev-secret-key-minimo-32-caracteres-ok
+      JWT_EXPIRATION: "86400000"
+      # OpenWeatherMap: añade tu clave aquí o déjalo vacío (el clima no funcionará)
+      OPENWEATHER_API_KEY: ""
+      # Email: déjalo vacío en local (los emails no se enviarán pero la app funciona)
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      PORT: "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── Frontend Angular (nginx) ──────────────────────────────
+  frontend:
+    build:
+      context: ./carpinchill-frontend
+      dockerfile: Dockerfile
+    container_name: carpinchill-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
