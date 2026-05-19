@@ -30,8 +30,12 @@ import { AuthService } from '../../services/auth.service';
           </div>
           <div class="card-pie">
             <a [routerLink]="['/viajes', r.viajeId]" class="btn-ver">Ver viaje</a>
-            <button *ngIf="r.estado!=='CANCELADA'" class="btn-can" (click)="cancelar(r.id)" [disabled]="cancelando===r.id">
-              {{ cancelando===r.id ? 'Cancelando...' : 'Cancelar reserva' }}
+            <!-- Botón Pagar ahora: solo en reservas PENDIENTE -->
+            <a *ngIf="r.estado==='PENDIENTE'" [routerLink]="['/pago', r.id]" class="btn-pagar">
+              💳 Pagar ahora
+            </a>
+            <button *ngIf="r.estado==='PENDIENTE'" class="btn-can" (click)="cancelar(r.id)" [disabled]="cancelando===r.id">
+              {{ cancelando===r.id ? 'Cancelando...' : 'Cancelar' }}
             </button>
           </div>
         </div>
@@ -55,8 +59,10 @@ import { AuthService } from '../../services/auth.service';
     .card-body{padding:12px 16px;display:flex;flex-wrap:wrap;gap:14px}
     .info{display:flex;flex-direction:column;gap:2px} .lbl{font-size:10px;color:#888;font-weight:700;text-transform:uppercase}
     .precio{font-size:17px;font-weight:bold;color:#1B4F72}
-    .card-pie{display:flex;gap:10px;padding:10px 16px;border-top:1px solid #f0f0f0}
+    .card-pie{display:flex;gap:10px;padding:10px 16px;border-top:1px solid #f0f0f0;align-items:center;flex-wrap:wrap}
     .btn-ver{display:inline-block;background:#1B4F72;color:white;padding:6px 14px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:600}
+    .btn-pagar{display:inline-block;background:#27ae60;color:white;padding:6px 14px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:600}
+    .btn-pagar:hover{background:#229954}
     .btn-can{background:none;border:1px solid #c0392b;color:#c0392b;padding:6px 14px;border-radius:7px;cursor:pointer;font-size:13px}
     .btn-can:disabled{opacity:.5;cursor:not-allowed}
     .msg{padding:10px 14px;border-radius:8px;margin-top:14px;background:#d5f5e3;color:#1e8449;font-size:13px} .msg.error{background:#fdecea;color:#c0392b}
@@ -76,8 +82,8 @@ export class MisReservasComponent implements OnInit {
   }
 
   getNombre(): string {
-  return (this.authService.getUsuarioActual() as any)?.nombre || '';
-}
+    return (this.authService.getUsuarioActual() as any)?.nombre || '';
+  }
 
   cancelar(id: number): void {
     this.cancelando = id;

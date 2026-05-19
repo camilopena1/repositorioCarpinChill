@@ -34,5 +34,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/perfil/perfil.component').then(m => m.PerfilComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'pago/:reservaId',
+    loadComponent: () => import('./components/pago/pago.component').then(m => m.PagoComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/viajes' }
 ];
