@@ -32,7 +32,6 @@ public class UsuarioService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
-
         return new User(
                 usuario.getEmail(),
                 usuario.getPasswordHash(),
@@ -44,7 +43,6 @@ public class UsuarioService implements UserDetailsService {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Ya existe una cuenta con ese email");
         }
-
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
         usuario.setApellidos(request.getApellidos());
@@ -54,7 +52,25 @@ public class UsuarioService implements UserDetailsService {
 
         Usuario guardado = usuarioRepository.save(usuario);
         emailService.enviarBienvenida(guardado);
+        return guardado;
+    }
 
+    /**
+     * Crea un nuevo agente. Solo accesible desde el panel de administración.
+     */
+    public Usuario crearAgente(String nombre, String apellidos, String email, String password) {
+        if (usuarioRepository.existsByEmail(email)) {
+            throw new RuntimeException("Ya existe una cuenta con ese email");
+        }
+        Usuario usuario = new Usuario();
+        usuario.setNombre(nombre);
+        usuario.setApellidos(apellidos);
+        usuario.setEmail(email);
+        usuario.setPasswordHash(passwordEncoder.encode(password));
+        usuario.setRol(Usuario.Rol.AGENTE);
+
+        Usuario guardado = usuarioRepository.save(usuario);
+        emailService.enviarBienvenida(guardado);
         return guardado;
     }
 
