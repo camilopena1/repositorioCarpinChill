@@ -8,20 +8,90 @@
   padding: 0;
 }
 
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background-color: #f0f4f8;
-  color: #333;
-  min-height: 100vh;
+/* Variables modo claro (por defecto) */
+:root {
+  --bg-app:        #f0f4f8;
+  --bg-card:       #ffffff;
+  --bg-navbar:     #1B4F72;
+  --bg-input:      #ffffff;
+  --bg-muted:      #f8f9fa;
+  --text-primary:  #333333;
+  --text-muted:    #666666;
+  --text-label:    #555555;
+  --border:        #dddddd;
+  --shadow:        rgba(0,0,0,0.08);
 }
 
-/* Scrollbar suave */
+/* Variables modo oscuro */
+body.dark {
+  --bg-app:        #0f1923;
+  --bg-card:       #1a2634;
+  --bg-navbar:     #0d1b2a;
+  --bg-input:      #1e2f3f;
+  --bg-muted:      #1e2f3f;
+  --text-primary:  #e8edf2;
+  --text-muted:    #a0b0c0;
+  --text-label:    #b0c4d4;
+  --border:        #2a3f54;
+  --shadow:        rgba(0,0,0,0.3);
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Aplicar variables a elementos comunes */
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark .filtros,
+body.dark .perfil-card,
+body.dark .pago-card,
+body.dark .card,
+body.dark .tarjeta-viaje,
+body.dark .detalle-contenido,
+body.dark .resumen-reserva {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark .card-cab,
+body.dark .tarjeta-contenido,
+body.dark .info-grid,
+body.dark .info-card,
+body.dark .seccion {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark h1, body.dark h2, body.dark h3 {
+  color: #7fb3d3 !important;
+}
+
+body.dark .destino,
+body.dark .descripcion,
+body.dark .campo-ayuda,
+body.dark .lbl {
+  color: var(--text-muted) !important;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-track { background: var(--bg-muted); }
 ::-webkit-scrollbar-thumb { background: #1B4F72; border-radius: 3px; }
 
 /* Links base */
 a { color: #1B4F72; }
+body.dark a { color: #7fb3d3; }
 
 /* Utilidades */
 .text-center { text-align: center; }

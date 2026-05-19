@@ -41,6 +41,12 @@ import { Router } from '@angular/router';
           <span class="rol-badge">{{ getRol() }}</span>
           <button (click)="cerrarSesion()" class="btn-logout">Salir</button>
         </li>
+        <!-- Botón modo oscuro/claro — siempre visible -->
+        <li>
+          <button (click)="toggleModo()" class="btn-modo" [title]="modoOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+            {{ modoOscuro ? '☀️' : '🌙' }}
+          </button>
+        </li>
       </ul>
     </nav>
   `,
@@ -120,9 +126,19 @@ import { Router } from '@angular/router';
       font-size: 13px;
     }
     .btn-logout:hover { background: rgba(255,255,255,0.25); }
+    .btn-modo {
+      background: rgba(255,255,255,0.15);
+      border: none; color: white; font-size: 18px;
+      width: 36px; height: 36px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .btn-modo:hover { background: rgba(255,255,255,0.25); }
   `]
 })
 export class NavbarComponent {
+
+  modoOscuro = document.body.classList.contains('dark');
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -131,4 +147,10 @@ export class NavbarComponent {
   getNombreUsuario(): string { return this.authService.getUsuarioActual()?.nombre || ''; }
   getRol(): string { return (this.authService.getUsuarioActual()?.rol || '').replace('ROLE_', ''); }
   cerrarSesion(): void { this.authService.logout(); this.router.navigate(['/viajes']); }
+
+  toggleModo(): void {
+    this.modoOscuro = !this.modoOscuro;
+    document.body.classList.toggle('dark', this.modoOscuro);
+    localStorage.setItem('carpinchill_dark', String(this.modoOscuro));
+  }
 }

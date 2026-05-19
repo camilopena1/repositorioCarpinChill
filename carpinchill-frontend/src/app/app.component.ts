@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 
@@ -20,6 +20,14 @@ import { NavbarComponent } from './components/navbar/navbar.component';
     }
   `]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'CarpinChill';
+
+  ngOnInit(): void {
+    // Recuperar preferencia guardada al arrancar la app
+    const modoOscuro = localStorage.getItem('carpinchill_dark') === 'true';
+    if (modoOscuro) {
+      document.body.classList.add('dark');
+    }
+  }
 }
