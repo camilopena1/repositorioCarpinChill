@@ -179,18 +179,40 @@ import { Viaje } from '../../models/viaje.model';
           <div class="lista-comentarios" *ngIf="!cargandoComentarios && comentarios.length > 0">
             <div *ngFor="let c of comentarios" class="comentario-card">
               <div class="comentario-header">
-                <div class="comentario-autor">
-                  <div class="avatar">{{ getIniciales(c) }}</div>
-                  <span class="nombre-autor">{{ c.usuario?.nombre || 'Usuario' }}</span>
+                <div class="comentario-autor" (click)="abrirModal(c)" style="cursor:pointer">
+                  <!-- Foto de perfil del usuario o iniciales -->
+                  <div class="avatar-comentario">
+                    <img *ngIf="c.usuario?.imagenUrl" [src]="c.usuario?.imagenUrl" [alt]="c.usuario?.nombre" class="avatar-img" (error)="onAvatarComentarioError($event, c)"/>
+                    <div *ngIf="!c.usuario?.imagenUrl" class="avatar-iniciales">{{ getIniciales(c) }}</div>
+                  </div>
+                  <div class="autor-info">
+                    <span class="nombre-autor">{{ c.usuario?.nombre || 'Usuario' }} {{ c.usuario?.apellidos || '' }}</span>
+                    <span class="bandera-usuario" *ngIf="getBandera(c.usuario?.paisCodigo)">{{ getBandera(c.usuario?.paisCodigo) }}</span>
+                  </div>
                 </div>
                 <div class="comentario-meta">
                   <div class="estrellas">
                     <span *ngFor="let s of getEstrellas(c.valoracion)" [class.llena]="s">★</span>
                   </div>
                   <span class="fecha-comentario">{{ c.fechaComentario | date:'dd/MM/yyyy' }}</span>
+                  <span class="fecha-edicion" *ngIf="c.fechaEdicion">· Editado {{ c.fechaEdicion | date:'dd/MM/yyyy' }}</span>
                 </div>
               </div>
               <p class="comentario-texto" *ngIf="c.comentario">{{ c.comentario }}</p>
+            </div>
+          </div>
+
+          <!-- Modal perfil usuario -->
+          <div class="modal-overlay" *ngIf="usuarioModal" (click)="cerrarModal()">
+            <div class="modal-card" (click)="$event.stopPropagation()">
+              <button class="modal-cerrar" (click)="cerrarModal()">✕</button>
+              <div class="modal-avatar">
+                <img *ngIf="usuarioModal.imagenUrl" [src]="usuarioModal.imagenUrl" alt="foto"/>
+                <div *ngIf="!usuarioModal.imagenUrl" class="modal-iniciales">{{ (usuarioModal.nombre || '?').charAt(0) }}</div>
+              </div>
+              <h3>{{ usuarioModal.nombre }} {{ usuarioModal.apellidos }}</h3>
+              <p class="modal-bandera" *ngIf="getBandera(usuarioModal.paisCodigo)">{{ getBandera(usuarioModal.paisCodigo) }} {{ getNombrePais(usuarioModal.paisCodigo) }}</p>
+              <p class="modal-email">{{ usuarioModal.email }}</p>
             </div>
           </div>
         </div>
@@ -253,6 +275,22 @@ import { Viaje } from '../../models/viaje.model';
 
     /* Comentarios */
     .comentarios-sec { background: #f8f9fa; border-radius: 14px; padding: 22px; }
+    .avatar-comentario { width:40px; height:40px; border-radius:50%; overflow:hidden; flex-shrink:0; border:2px solid #1B4F72; }
+    .avatar-img { width:100%; height:100%; object-fit:cover; }
+    .avatar-iniciales { width:100%; height:100%; background:#1B4F72; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; }
+    .autor-info { display:flex; align-items:center; gap:6px; }
+    .nombre-autor { font-weight:600; font-size:14px; }
+    .bandera-usuario { font-size:18px; }
+    .fecha-edicion { font-size:11px; color:#999; font-style:italic; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
+    .modal-card { background:white; border-radius:20px; padding:32px; text-align:center; min-width:280px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+    .modal-cerrar { position:absolute; top:12px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
+    .modal-avatar { width:80px; height:80px; border-radius:50%; overflow:hidden; margin:0 auto 16px; border:3px solid #1B4F72; }
+    .modal-avatar img { width:100%; height:100%; object-fit:cover; }
+    .modal-iniciales { width:100%; height:100%; background:#1B4F72; color:white; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; }
+    .modal-card h3 { margin:0 0 8px; color:#1B4F72; }
+    .modal-bandera { font-size:18px; margin:4px 0; }
+    .modal-email { color:#888; font-size:13px; margin:4px 0 0; }
     .form-comentario { background: white; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e8e8e8; }
     .form-comentario h3 { margin: 0 0 14px; font-size: 15px; color: #1B4F72; }
     .estrellas-input { display: flex; align-items: center; gap: 6px; }
@@ -383,6 +421,40 @@ export class DetalleViajeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getEstrellas(valoracion: number): boolean[] {
     return [1, 2, 3, 4, 5].map(i => i <= valoracion);
+  }
+
+  usuarioModal: any = null;
+
+  private PAISES: Record<string, {nombre: string, bandera: string}> = {
+    'ES': {nombre:'España', bandera:'🇪🇸'}, 'FR': {nombre:'Francia', bandera:'🇫🇷'},
+    'DE': {nombre:'Alemania', bandera:'🇩🇪'}, 'IT': {nombre:'Italia', bandera:'🇮🇹'},
+    'PT': {nombre:'Portugal', bandera:'🇵🇹'}, 'GB': {nombre:'Reino Unido', bandera:'🇬🇧'},
+    'US': {nombre:'Estados Unidos', bandera:'🇺🇸'}, 'MX': {nombre:'México', bandera:'🇲🇽'},
+    'AR': {nombre:'Argentina', bandera:'🇦🇷'}, 'CO': {nombre:'Colombia', bandera:'🇨🇴'},
+    'CL': {nombre:'Chile', bandera:'🇨🇱'}, 'PE': {nombre:'Perú', bandera:'🇵🇪'},
+    'VE': {nombre:'Venezuela', bandera:'🇻🇪'}, 'EC': {nombre:'Ecuador', bandera:'🇪🇨'},
+    'MA': {nombre:'Marruecos', bandera:'🇲🇦'}, 'JP': {nombre:'Japón', bandera:'🇯🇵'},
+    'NO': {nombre:'Noruega', bandera:'🇳🇴'}, 'OTHER': {nombre:'Otro', bandera:'🌍'}
+  };
+
+  getBandera(codigo?: string): string {
+    return codigo ? (this.PAISES[codigo]?.bandera || '') : '';
+  }
+
+  getNombrePais(codigo?: string): string {
+    return codigo ? (this.PAISES[codigo]?.nombre || '') : '';
+  }
+
+  abrirModal(c: Comentario): void {
+    if (c.usuario) this.usuarioModal = c.usuario;
+  }
+
+  cerrarModal(): void {
+    this.usuarioModal = null;
+  }
+
+  onAvatarComentarioError(event: Event, c: Comentario): void {
+    if (c.usuario) c.usuario.imagenUrl = undefined;
   }
 
   getIniciales(c: Comentario): string {

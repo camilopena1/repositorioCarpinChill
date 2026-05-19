@@ -9,7 +9,14 @@ export interface Comentario {
   comentario: string;
   valoracion: number;
   fechaComentario?: string;
-  usuario?: { nombre: string; apellidos: string; email: string };
+  fechaEdicion?: string;
+  usuario?: {
+    nombre: string;
+    apellidos: string;
+    email: string;
+    imagenUrl?: string;
+    paisCodigo?: string;
+  };
 }
 
 export interface MediaResponse {
@@ -40,6 +47,14 @@ export class ComentarioService {
   crearComentario(viajeId: number, valoracion: number, comentario: string): Observable<Comentario> {
     return this.http.post<Comentario>(
       `${this.apiUrl}/viaje/${viajeId}`,
+      { valoracion, comentario },
+      { headers: this.headers }
+    );
+  }
+
+  editarComentario(id: number, valoracion: number, comentario: string): Observable<Comentario> {
+    return this.http.put<Comentario>(
+      `${this.apiUrl}/${id}`,
       { valoracion, comentario },
       { headers: this.headers }
     );
