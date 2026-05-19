@@ -1,6 +1,7 @@
 package com.carpinchill.controller;
 
 import com.carpinchill.model.EstadoReserva;
+import com.carpinchill.repository.PagoRepository;
 import com.carpinchill.repository.ReservaRepository;
 import com.carpinchill.repository.ViajeRepository;
 import com.carpinchill.repository.UsuarioRepository;
@@ -12,10 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Controlador de estadísticas para el panel de administración.
- * Proporciona métricas en tiempo real del sistema.
- */
 @RestController
 @RequestMapping("/api/stats")
 @CrossOrigin(origins = "*")
@@ -25,13 +22,16 @@ public class StatsController {
     private final ViajeRepository viajeRepository;
     private final ReservaRepository reservaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final PagoRepository pagoRepository;
 
     public StatsController(ViajeRepository viajeRepository,
                            ReservaRepository reservaRepository,
-                           UsuarioRepository usuarioRepository) {
+                           UsuarioRepository usuarioRepository,
+                           PagoRepository pagoRepository) {
         this.viajeRepository = viajeRepository;
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.pagoRepository = pagoRepository;
     }
 
     @Operation(summary = "Estadísticas generales del sistema")
@@ -41,8 +41,7 @@ public class StatsController {
 
         // Viajes
         long totalViajes = viajeRepository.count();
-        long viajesActivos = viajeRepository.findAll().stream()
-                .filter(v -> v.getActivo()).count();
+        long viajesActivos = viajeRepository.findAll().stream().filter(v -> v.getActivo()).count();
         stats.put("totalViajes", totalViajes);
         stats.put("viajesActivos", viajesActivos);
 
@@ -56,14 +55,19 @@ public class StatsController {
         stats.put("reservasConfirmadas", reservasConfirmadas);
         stats.put("reservasCanceladas", reservasCanceladas);
 
-        // Ingresos totales (solo reservas confirmadas)
+        // Ingresos por reservas confirmadas
         double ingresosTotales = reservaRepository.findByEstado(EstadoReserva.CONFIRMADA)
                 .stream().mapToDouble(r -> r.getPrecioTotal()).sum();
         stats.put("ingresosTotales", ingresosTotales);
 
         // Usuarios
-        long totalUsuarios = usuarioRepository.count();
-        stats.put("totalUsuarios", totalUsuarios);
+        stats.put("totalUsuarios", usuarioRepository.count());
+
+        // Pagos simulados
+        Double ingresosPagos = pagoRepository.sumIngresosCompletados();
+        stats.put("pagosCompletados", pagoRepository.countPagosCompletados());
+        stats.put("pagosRechazados", pagoRepository.countPagosRechazados());
+        stats.put("ingresosPagosConfirmados", ingresosPagos != null ? ingresosPagos : 0.0);
 
         return ResponseEntity.ok(stats);
     }
