@@ -74,6 +74,7 @@ public class SecurityConfig {
             .authenticationProvider(authProvider())
             .authorizeHttpRequests(auth -> auth
                 // Públicos sin autenticación
+                .requestMatchers("/api/auth/crear-agente").hasRole("ADMIN")
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
@@ -105,6 +106,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/clientes/usuario/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/clientes/usuario/**").authenticated()
                 .requestMatchers("/api/clientes/**").hasAnyRole("ADMIN", "AGENTE")
+                // Pagos: procesar es para cualquier autenticado; stats y listar solo admin/agente
+                .requestMatchers(HttpMethod.POST, "/api/pagos/procesar").authenticated()
+                .requestMatchers("/api/pagos/**").hasAnyRole("ADMIN", "AGENTE")
 
                 // Estadísticas: solo ADMIN o AGENTE
                 .requestMatchers("/api/stats/**").hasAnyRole("ADMIN", "AGENTE")
