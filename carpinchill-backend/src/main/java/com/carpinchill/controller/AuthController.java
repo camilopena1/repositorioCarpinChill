@@ -44,13 +44,11 @@ public class AuthController {
     @PostMapping("/registro")
     public ResponseEntity<?> registro(@Valid @RequestBody RegistroRequest request,
                                        HttpServletRequest httpRequest) {
-        // Rate limiting
         if (!securityConfig.getBucketParaIp(httpRequest.getRemoteAddr()).tryConsume(1)) {
             return ResponseEntity.status(429).body(Map.of("error", "Demasiadas peticiones"));
         }
         try {
             Usuario usuario = usuarioService.registrar(request);
-            // Auto-login tras registro
             Authentication auth = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
@@ -65,7 +63,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
                                     HttpServletRequest httpRequest) {
-        // Rate limiting
         if (!securityConfig.getBucketParaIp(httpRequest.getRemoteAddr()).tryConsume(1)) {
             return ResponseEntity.status(429).body(Map.of("error", "Demasiadas peticiones"));
         }
@@ -78,6 +75,27 @@ public class AuthController {
             return ResponseEntity.ok(AuthResponse.from(token, usuario));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body(Map.of("error", "Email o contraseña incorrectos"));
+        }
+    }
+
+    @Operation(summary = "Crear nuevo agente (solo ADMIN)")
+    @PostMapping("/crear-agente")
+    public ResponseEntity<?> crearAgente(@RequestBody Map<String, String> body) {
+        try {
+            Usuario agente = usuarioService.crearAgente(
+                body.get("nombre"),
+                body.get("apellidos"),
+                body.get("email"),
+                body.get("password")
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "id", agente.getId(),
+                "nombre", agente.getNombre(),
+                "email", agente.getEmail(),
+                "rol", agente.getRol()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
