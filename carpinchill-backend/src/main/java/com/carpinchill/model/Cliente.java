@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Perfil de cliente vinculado a un Usuario (relación 1:1).
- * Contiene información adicional del cliente de la agencia.
- */
 @Data
 @NoArgsConstructor
 @Entity
@@ -39,6 +35,10 @@ public class Cliente {
 
     @Column(length = 500)
     private String notas;
+
+    // Código ISO del país del usuario (ES, FR, DE...) para mostrar la bandera emoji
+    @Column(name = "pais_codigo", length = 2)
+    private String paisCodigo;
 
     @Column(nullable = false)
     private Boolean activo = true;
