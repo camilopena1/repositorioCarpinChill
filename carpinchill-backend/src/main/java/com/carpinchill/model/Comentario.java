@@ -7,14 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-/**
- * Entidad Comentario — Sistema de valoraciones de viajes.
- * Cada usuario puede dejar una valoración (1-5 estrellas) y
- * un comentario en texto para cada viaje que haya reservado.
- */
 @Data
 @NoArgsConstructor
 @Entity
@@ -47,4 +41,8 @@ public class Comentario {
 
     @Column(name = "fecha_comentario")
     private LocalDateTime fechaComentario = LocalDateTime.now();
+
+    // Fecha de la última edición (null si nunca fue editado)
+    @Column(name = "fecha_edicion")
+    private LocalDateTime fechaEdicion;
 }

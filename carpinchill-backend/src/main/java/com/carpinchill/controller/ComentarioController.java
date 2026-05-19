@@ -41,7 +41,7 @@ public class ComentarioController {
         ));
     }
 
-    @Operation(summary = "Añadir comentario y valoración")
+    @Operation(summary = "Añadir comentario y valoración (con filtro IA)")
     @PostMapping("/viaje/{viajeId}")
     public ResponseEntity<?> crear(@PathVariable Long viajeId,
                                     @RequestBody Map<String, Object> body,
@@ -54,6 +54,21 @@ public class ComentarioController {
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body("Ya has publicado una opinión para este viaje. Solo se permite una valoración por viaje.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Editar comentario propio")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editar(@PathVariable Long id,
+                                     @RequestBody Map<String, Object> body,
+                                     Authentication auth) {
+        try {
+            Integer valoracion = (Integer) body.get("valoracion");
+            String texto = (String) body.get("comentario");
+            Comentario c = comentarioService.editar(id, valoracion, texto, auth.getName());
+            return ResponseEntity.ok(c);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
