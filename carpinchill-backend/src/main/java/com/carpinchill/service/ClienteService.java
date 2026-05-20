@@ -41,7 +41,8 @@ public class ClienteService {
     }
 
     public Cliente crearOActualizar(Long usuarioId, String telefono, String direccion,
-                                     String dni, String fechaNacimiento, String imagenUrl, String notas) {
+                                     String dni, String fechaNacimiento, String imagenUrl,
+                                     String notas, String paisCodigo) {
         Usuario usuario = usuarioService.findAll().stream()
                 .filter(u -> u.getId().equals(usuarioId))
                 .findFirst()
@@ -56,6 +57,7 @@ public class ClienteService {
         cliente.setFechaNacimiento(fechaNacimiento);
         cliente.setImagenUrl(imagenUrl);
         cliente.setNotas(notas);
+        cliente.setPaisCodigo(paisCodigo);
         cliente.setActivo(true);
         return clienteRepository.save(cliente);
     }

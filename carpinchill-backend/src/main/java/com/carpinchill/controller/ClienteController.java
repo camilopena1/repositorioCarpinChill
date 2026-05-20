@@ -64,7 +64,8 @@ public class ClienteController {
                 datos.get("dni"),
                 datos.get("fechaNacimiento"),
                 datos.get("imagenUrl"),
-                datos.get("notas")
+                datos.get("notas"),
+                datos.get("paisCodigo")
             );
             return ResponseEntity.ok(c);
         } catch (RuntimeException e) {

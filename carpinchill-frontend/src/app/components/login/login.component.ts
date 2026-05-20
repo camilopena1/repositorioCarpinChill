@@ -36,7 +36,7 @@ import { AuthService } from '../../services/auth.service';
           <p>Usuarios de prueba:</p>
           <div class="prueba-chips">
             <span (click)="rellenar('admin@carpinchill.com', 'admin123')">Admin</span>
-            <span (click)="rellenar('agente@carpinchill.com', 'agente123')">Agente</span>
+            <span (click)="rellenar('agente@carpinchill.com', 'admin123')">Agente</span>
           </div>
           <p class="prueba-hint" *ngIf="chipUsado">✓ Datos cargados — pulsa "Iniciar sesión"</p>
         </div>

@@ -75,6 +75,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Públicos sin autenticación
                 .requestMatchers("/api/auth/crear-agente").hasRole("ADMIN")
+                .requestMatchers("/api/auth/agentes").hasRole("ADMIN")
+                .requestMatchers("/api/auth/desactivar-agente/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()

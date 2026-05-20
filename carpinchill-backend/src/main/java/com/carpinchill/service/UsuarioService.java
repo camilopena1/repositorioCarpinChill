@@ -74,6 +74,22 @@ public class UsuarioService implements UserDetailsService {
         return guardado;
     }
 
+    public void desactivarAgente(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (usuario.getRol() != Usuario.Rol.AGENTE) {
+            throw new RuntimeException("El usuario no es un agente");
+        }
+        usuario.setActivo(false);
+        usuarioRepository.save(usuario);
+    }
+
+    public List<Usuario> listarAgentes() {
+        return usuarioRepository.findAll().stream()
+                .filter(u -> u.getRol() == Usuario.Rol.AGENTE)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public Usuario findByEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));

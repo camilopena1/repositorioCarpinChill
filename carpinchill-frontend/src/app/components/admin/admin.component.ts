@@ -30,7 +30,7 @@ import { environment } from '../../../environments/environment';
           <button class="tab" [class.activo]="tab === 'reservas'" (click)="tab = 'reservas'; cargarReservas()">
             📋 Reservas ({{ reservas.length }})
           </button>
-          <button class="tab" [class.activo]="tab === 'agentes'" (click)="tab = 'agentes'">
+          <button class="tab" [class.activo]="tab === 'agentes'" (click)="tab = 'agentes'; cargarAgentes()">
             👤 Agentes
           </button>
         </div>
@@ -239,31 +239,41 @@ import { environment } from '../../../environments/environment';
       <!-- Pestaña Agentes -->
       <div *ngIf="tab === 'agentes'">
         <div class="tab-cabecera">
-          <span>Crear nuevo agente</span>
+          <span>Gestión de agentes</span>
         </div>
+
+        <!-- Crear nuevo agente -->
         <div class="form-agente">
+          <h3 style="margin:0 0 16px;color:var(--heading,#1B4F72)">Crear nuevo agente</h3>
           <div *ngIf="mensajeAgente" class="mensaje" [class.error]="errorAgente">{{ mensajeAgente }}</div>
           <div class="agente-campos">
-            <div class="campo-agente">
-              <label>Nombre</label>
-              <input [(ngModel)]="nuevoAgente.nombre" placeholder="Nombre" />
-            </div>
-            <div class="campo-agente">
-              <label>Apellidos</label>
-              <input [(ngModel)]="nuevoAgente.apellidos" placeholder="Apellidos" />
-            </div>
-            <div class="campo-agente">
-              <label>Email</label>
-              <input [(ngModel)]="nuevoAgente.email" type="email" placeholder="agente@carpinchill.com" />
-            </div>
-            <div class="campo-agente">
-              <label>Contraseña</label>
-              <input [(ngModel)]="nuevoAgente.password" type="password" placeholder="Mínimo 6 caracteres" />
-            </div>
+            <div class="campo-agente"><label>Nombre</label><input [(ngModel)]="nuevoAgente.nombre" placeholder="Nombre"/></div>
+            <div class="campo-agente"><label>Apellidos</label><input [(ngModel)]="nuevoAgente.apellidos" placeholder="Apellidos"/></div>
+            <div class="campo-agente"><label>Email</label><input [(ngModel)]="nuevoAgente.email" type="email" placeholder="agente@carpinchill.com"/></div>
+            <div class="campo-agente"><label>Contraseña</label><input [(ngModel)]="nuevoAgente.password" type="password" placeholder="Mínimo 6 caracteres"/></div>
           </div>
           <button class="btn-nuevo" (click)="crearAgente()" [disabled]="creandoAgente">
             {{ creandoAgente ? 'Creando...' : '+ Crear agente' }}
           </button>
+        </div>
+
+        <!-- Lista de agentes -->
+        <div class="tabla-contenedor" style="margin-top:20px">
+          <table class="tabla-admin">
+            <thead><tr><th>Nombre</th><th>Email</th><th>Estado</th><th>Acción</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let a of agentes">
+                <td>{{ a.nombre }} {{ a.apellidos }}</td>
+                <td>{{ a.email }}</td>
+                <td><span class="badge" [class.badge-activo]="a.activo" [class.badge-inactivo]="!a.activo">{{ a.activo ? 'Activo' : 'Inactivo' }}</span></td>
+                <td>
+                  <button *ngIf="a.activo" class="btn-accion btn-cancelar-res" (click)="desactivarAgente(a)">Desactivar</button>
+                  <span *ngIf="!a.activo" class="sin-acciones">—</span>
+                </td>
+              </tr>
+              <tr *ngIf="agentes.length === 0"><td colspan="4" class="sin-datos">No hay agentes registrados</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -375,6 +385,7 @@ export class AdminComponent implements OnInit {
   creandoAgente = false;
   mensajeAgente = '';
   errorAgente = false;
+  agentes: any[] = [];
 
   constructor(
     private viajesService: ViajesService,
@@ -520,6 +531,27 @@ export class AdminComponent implements OnInit {
     this.mensaje = texto;
     this.esError = error;
     setTimeout(() => this.mensaje = '', 4000);
+  }
+
+  cargarAgentes(): void {
+    const token = this.authService.getToken();
+    const h: Record<string, string> = {};
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    fetch(`${environment.apiUrl}/auth/agentes`, { headers: h })
+      .then(r => r.json())
+      .then(data => this.agentes = Array.isArray(data) ? data : [])
+      .catch(() => this.agentes = []);
+  }
+
+  desactivarAgente(agente: any): void {
+    if (!confirm(`¿Desactivar al agente ${agente.nombre}?`)) return;
+    const token = this.authService.getToken();
+    const h: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    fetch(`${environment.apiUrl}/auth/desactivar-agente/${agente.id}`, { method: 'PATCH', headers: h })
+      .then(r => r.json())
+      .then(() => { agente.activo = false; this.mostrarMensaje('Agente desactivado correctamente.'); })
+      .catch(() => this.mostrarMensaje('Error al desactivar el agente.', true));
   }
 
   crearAgente(): void {

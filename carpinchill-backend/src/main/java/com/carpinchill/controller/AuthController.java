@@ -78,6 +78,29 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "Listar todos los agentes (solo ADMIN)")
+    @GetMapping("/agentes")
+    public ResponseEntity<?> listarAgentes() {
+        return ResponseEntity.ok(usuarioService.listarAgentes().stream().map(u -> Map.of(
+            "id", u.getId(),
+            "nombre", u.getNombre(),
+            "apellidos", u.getApellidos(),
+            "email", u.getEmail(),
+            "activo", u.getActivo()
+        )).toList());
+    }
+
+    @Operation(summary = "Desactivar agente (solo ADMIN)")
+    @PatchMapping("/desactivar-agente/{id}")
+    public ResponseEntity<?> desactivarAgente(@PathVariable Long id) {
+        try {
+            usuarioService.desactivarAgente(id);
+            return ResponseEntity.ok(Map.of("mensaje", "Agente desactivado correctamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @Operation(summary = "Crear nuevo agente (solo ADMIN)")
     @PostMapping("/crear-agente")
     public ResponseEntity<?> crearAgente(@RequestBody Map<String, String> body) {
