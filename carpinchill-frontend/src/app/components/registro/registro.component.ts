@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <div class="pagina">
       <div class="card">
-        <img [src]="modoOscuro ? 'assets/carpinchoN-logo.png' : 'assets/carpincho-logo.png'"
+        <img [src]="isDark() ? 'assets/carpinchoN-logo.png' : 'assets/carpincho-logo.png'"
              alt="CarpinChill" class="logo-img"
              onerror="this.src='assets/carpincho-logo.png'" />
         <h1>CarpinChill</h1>
@@ -49,6 +49,7 @@ export class RegistroComponent {
   form = { nombre: '', apellidos: '', email: '', password: '' };
   error = ''; cargando = false;
   modoOscuro = localStorage.getItem('carpinchill_dark') === 'true';
+  isDark(): boolean { return document.body.classList.contains('dark'); }
   constructor(private authService: AuthService, private router: Router) {}
   registrar(): void {
     if (!this.form.nombre || !this.form.apellidos || !this.form.email || !this.form.password) {

@@ -45,7 +45,7 @@ public class ComentarioService {
     private boolean esComentarioApropiado(String texto) {
         if (geminiApiKey == null || geminiApiKey.isBlank()) return true;
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + geminiApiKey;
+            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent?key=" + geminiApiKey;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <div class="login-pagina">
       <div class="login-card">
-        <img src="assets/carpinchoN-logo.png" alt="CarpinChill logo" class="login-logo"
+        <img [src]="isDark() ? 'assets/carpinchoN-logo.png' : 'assets/carpincho-logo.png'" alt="CarpinChill logo" class="login-logo"
              onerror="this.src='assets/carpincho-logo.png'" />
         <h1>CarpinChill</h1>
         <p class="login-subtitulo">Inicia sesión para continuar</p>
@@ -36,7 +36,7 @@ import { AuthService } from '../../services/auth.service';
           <p>Usuarios de prueba:</p>
           <div class="prueba-chips">
             <span (click)="rellenar('admin@carpinchill.com', 'admin123')">Admin</span>
-            <span (click)="rellenar('agente@carpinchill.com', 'admin123')">Agente</span>
+            <span (click)="rellenar('agente@carpinchill.com', 'agente123')">Agente</span>
           </div>
           <p class="prueba-hint" *ngIf="chipUsado">✓ Datos cargados — pulsa "Iniciar sesión"</p>
         </div>
@@ -97,6 +97,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LoginComponent {
   email = ''; password = ''; errorMensaje = ''; cargando = false; chipUsado = false;
+  isDark(): boolean { return document.body.classList.contains('dark'); }
   constructor(private authService: AuthService, private router: Router) {}
   rellenar(e: string, p: string): void { this.email = e; this.password = p; this.chipUsado = true; }
   iniciarSesion(): void {
