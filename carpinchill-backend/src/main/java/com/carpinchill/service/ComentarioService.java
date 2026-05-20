@@ -42,14 +42,10 @@ public class ComentarioService {
         return comentarioRepository.calcularMediaPorViaje(viajeId);
     }
 
-    /**
-     * Llama a la API de Google Gemini para verificar si el comentario es apropiado.
-     * Si la clave no está configurada, permite el comentario directamente.
-     */
     private boolean esComentarioApropiado(String texto) {
         if (geminiApiKey == null || geminiApiKey.isBlank()) return true;
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + geminiApiKey;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -88,11 +84,9 @@ public class ComentarioService {
         if (texto != null && !texto.isBlank() && !esComentarioApropiado(texto)) {
             throw new RuntimeException("Tu comentario contiene contenido inapropiado y no pudo publicarse.");
         }
-
         Usuario usuario = usuarioService.findByEmail(emailUsuario);
         Viaje viaje = viajeRepository.findById(viajeId)
                 .orElseThrow(() -> new RuntimeException("Viaje no encontrado"));
-
         Comentario c = new Comentario();
         c.setUsuario(usuario);
         c.setViaje(viaje);
@@ -105,14 +99,12 @@ public class ComentarioService {
     public Comentario editar(Long comentarioId, Integer valoracion, String texto, String emailUsuario) {
         Comentario c = comentarioRepository.findById(comentarioId)
                 .orElseThrow(() -> new RuntimeException("Comentario no encontrado"));
-
         if (!c.getUsuario().getEmail().equals(emailUsuario)) {
             throw new RuntimeException("No tienes permiso para editar este comentario");
         }
         if (texto != null && !texto.isBlank() && !esComentarioApropiado(texto)) {
             throw new RuntimeException("Tu comentario contiene contenido inapropiado y no pudo publicarse.");
         }
-
         c.setValoracion(valoracion);
         c.setComentario(texto);
         c.setFechaEdicion(LocalDateTime.now());

@@ -1,6 +1,7 @@
 package com.carpinchill.controller;
 
 import com.carpinchill.model.Comentario;
+import com.carpinchill.repository.ClienteRepository;
 import com.carpinchill.service.ComentarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,15 +22,49 @@ import java.util.Map;
 public class ComentarioController {
 
     private final ComentarioService comentarioService;
+    private final ClienteRepository clienteRepository;
 
-    public ComentarioController(ComentarioService comentarioService) {
+    public ComentarioController(ComentarioService comentarioService, ClienteRepository clienteRepository) {
         this.comentarioService = comentarioService;
+        this.clienteRepository = clienteRepository;
+    }
+
+    /**
+     * Enriquece un comentario con los datos del perfil del cliente (imagenUrl, paisCodigo)
+     * para que el frontend pueda mostrar la foto y la bandera del usuario.
+     */
+    private Map<String, Object> toResponse(Comentario c) {
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("id", c.getId());
+        resp.put("comentario", c.getComentario());
+        resp.put("valoracion", c.getValoracion());
+        resp.put("fechaComentario", c.getFechaComentario());
+        resp.put("fechaEdicion", c.getFechaEdicion());
+
+        // Datos del usuario + perfil del cliente
+        if (c.getUsuario() != null) {
+            Map<String, Object> usuario = new HashMap<>();
+            usuario.put("nombre", c.getUsuario().getNombre());
+            usuario.put("apellidos", c.getUsuario().getApellidos());
+            usuario.put("email", c.getUsuario().getEmail());
+
+            // Buscar el perfil del cliente para obtener imagenUrl y paisCodigo
+            clienteRepository.findByUsuarioId(c.getUsuario().getId()).ifPresent(cliente -> {
+                usuario.put("imagenUrl", cliente.getImagenUrl());
+                usuario.put("paisCodigo", cliente.getPaisCodigo());
+            });
+
+            resp.put("usuario", usuario);
+        }
+        return resp;
     }
 
     @Operation(summary = "Comentarios de un viaje")
     @GetMapping("/viaje/{viajeId}")
-    public ResponseEntity<List<Comentario>> porViaje(@PathVariable Long viajeId) {
-        return ResponseEntity.ok(comentarioService.obtenerPorViaje(viajeId));
+    public ResponseEntity<List<Map<String, Object>>> porViaje(@PathVariable Long viajeId) {
+        List<Map<String, Object>> resultado = comentarioService.obtenerPorViaje(viajeId)
+                .stream().map(this::toResponse).toList();
+        return ResponseEntity.ok(resultado);
     }
 
     @Operation(summary = "Valoración media de un viaje")
@@ -50,10 +86,10 @@ public class ComentarioController {
             Integer valoracion = (Integer) body.get("valoracion");
             String texto = (String) body.get("comentario");
             Comentario c = comentarioService.crear(viajeId, valoracion, texto, auth.getName());
-            return ResponseEntity.status(HttpStatus.CREATED).body(c);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(c));
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body("Ya has publicado una opinión para este viaje. Solo se permite una valoración por viaje.");
+                .body("Ya has publicado una opinión para este viaje.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -68,7 +104,7 @@ public class ComentarioController {
             Integer valoracion = (Integer) body.get("valoracion");
             String texto = (String) body.get("comentario");
             Comentario c = comentarioService.editar(id, valoracion, texto, auth.getName());
-            return ResponseEntity.ok(c);
+            return ResponseEntity.ok(toResponse(c));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
