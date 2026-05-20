@@ -1,99 +1,155 @@
-/* =============================================
-   CARPINCHILL - Estilos globales
-   ============================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* Variables modo claro (por defecto) */
+/* ── MODO CLARO (por defecto) ── */
 :root {
-  --bg-app:        #f0f4f8;
-  --bg-card:       #ffffff;
-  --bg-navbar:     #1B4F72;
-  --bg-input:      #ffffff;
-  --bg-muted:      #f8f9fa;
-  --text-primary:  #333333;
-  --text-muted:    #666666;
-  --text-label:    #555555;
-  --border:        #dddddd;
-  --shadow:        rgba(0,0,0,0.08);
+  --bg-app:       #f0f4f8;
+  --bg-card:      #ffffff;
+  --bg-input:     #ffffff;
+  --bg-muted:     #f8f9fa;
+  --text-primary: #1a1a1a;
+  --text-muted:   #666666;
+  --text-label:   #555555;
+  --border:       #dddddd;
+  --shadow:       rgba(0,0,0,0.08);
+  --link-color:   #1B4F72;
+  --heading:      #1B4F72;
 }
 
-/* Variables modo oscuro */
+/* ── MODO OSCURO: azul oscuro uniforme + letras blancas ── */
 body.dark {
-  --bg-app:        #0f1923;
-  --bg-card:       #1a2634;
-  --bg-navbar:     #0d1b2a;
-  --bg-input:      #1e2f3f;
-  --bg-muted:      #1e2f3f;
-  --text-primary:  #e8edf2;
-  --text-muted:    #a0b0c0;
-  --text-label:    #b0c4d4;
-  --border:        #2a3f54;
-  --shadow:        rgba(0,0,0,0.3);
+  --bg-app:       #0d1b2a;
+  --bg-card:      #122233;
+  --bg-input:     #122233;
+  --bg-muted:     #0d1b2a;
+  --text-primary: #ffffff;
+  --text-muted:   #ffffff;
+  --text-label:   #ffffff;
+  --border:       #1e3a54;
+  --shadow:       rgba(0,0,0,0.4);
+  --link-color:   #ffffff;
+  --heading:      #ffffff;
 }
 
+/* ── BASE ── */
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-primary);
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.25s, color 0.25s;
 }
 
-/* Aplicar variables a elementos comunes */
+/* Todo hereda el color blanco en modo oscuro */
+body.dark, body.dark * {
+  color: var(--text-primary);
+}
+
+/* ── FONDOS EN MODO OSCURO ── */
+body.dark .login-card,
+body.dark .perfil-card,
+body.dark .pago-card,
+body.dark .tarjeta-viaje,
+body.dark .tarjeta-contenido,
+body.dark .card,
+body.dark .filtros,
+body.dark .form-agente,
+body.dark .modal-card,
+body.dark .comentario-card,
+body.dark .tabla-contenedor,
+body.dark .seccion,
+body.dark .reserva-sec,
+body.dark .comentarios-sec,
+body.dark .resumen,
+body.dark .resumen-reserva,
+body.dark .form-comentario,
+body.dark .info-card,
+body.dark .admin-pagina > div {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark .card-cab,
+body.dark .bg-muted {
+  background-color: var(--bg-muted) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── TABLA ADMIN ── */
+body.dark .tabla-admin,
+body.dark .tabla-admin td,
+body.dark .tabla-admin tr:hover td {
+  background-color: var(--bg-card) !important;
+  color: #ffffff !important;
+  border-color: var(--border) !important;
+}
+body.dark .tabla-admin th {
+  background-color: #1B4F72 !important;
+  color: #ffffff !important;
+}
+
+/* ── MODAL ADMIN ── */
+body.dark .modal-overlay { background: rgba(0,0,0,0.8) !important; }
+body.dark .modal-overlay > div,
+body.dark [class*="modal-contenido"] {
+  background-color: var(--bg-card) !important;
+}
+
+/* ── INPUTS ── */
 body.dark input,
 body.dark select,
 body.dark textarea {
   background-color: var(--bg-input) !important;
-  color: var(--text-primary) !important;
+  color: #ffffff !important;
   border-color: var(--border) !important;
 }
+body.dark input::placeholder,
+body.dark textarea::placeholder {
+  color: rgba(255,255,255,0.5) !important;
+}
 
-body.dark .filtros,
-body.dark .perfil-card,
-body.dark .pago-card,
-body.dark .card,
-body.dark .tarjeta-viaje,
-body.dark .detalle-contenido,
-body.dark .resumen-reserva {
+/* ── TABS ADMIN ── */
+body.dark .tab {
   background-color: var(--bg-card) !important;
-  color: var(--text-primary) !important;
+  color: #ffffff !important;
+  border-color: #1e3a54 !important;
+}
+body.dark .tab.activo {
+  background-color: #1B4F72 !important;
+  color: #ffffff !important;
 }
 
-body.dark .card-cab,
-body.dark .tarjeta-contenido,
-body.dark .info-grid,
-body.dark .info-card,
-body.dark .seccion {
-  background-color: var(--bg-card) !important;
-  color: var(--text-primary) !important;
+/* ── BOTONES — mantienen su color propio ── */
+body.dark .btn-entrar,
+body.dark .btn-nuevo,
+body.dark .btn-ver,
+body.dark .btn-pagar,
+body.dark .btn-guardar,
+body.dark .btn-comentar,
+body.dark .btn-reservar,
+body.dark .btn-login,
+body.dark button[type="submit"] {
+  color: #ffffff !important;
 }
 
-body.dark h1, body.dark h2, body.dark h3 {
-  color: #7fb3d3 !important;
-}
+/* ── BADGES ── */
+body.dark .badge-pendiente  { background: #3a2a00 !important; color: #f5c518 !important; }
+body.dark .badge-cancelada  { background: #3a0808 !important; color: #ff8080 !important; }
+body.dark .badge-activo,
+body.dark .badge-confirmada { background: #083a18 !important; color: #4ade80 !important; }
+body.dark .badge-inactivo   { background: #1e2a38 !important; color: #aaa    !important; }
+body.dark .estado-pendiente { background: #3a2a00 !important; color: #f5c518 !important; }
+body.dark .estado-cancelada { background: #3a0808 !important; color: #ff8080 !important; }
+body.dark .estado-confirmada{ background: #083a18 !important; color: #4ade80 !important; }
 
-body.dark .destino,
-body.dark .descripcion,
-body.dark .campo-ayuda,
-body.dark .lbl {
-  color: var(--text-muted) !important;
-}
+/* ── LINKS ── */
+body.dark a { color: #ffffff; }
+body.dark .link-titulo { color: #ffffff !important; }
 
-/* Scrollbar */
+/* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-muted); }
 ::-webkit-scrollbar-thumb { background: #1B4F72; border-radius: 3px; }
 
-/* Links base */
-a { color: #1B4F72; }
-body.dark a { color: #7fb3d3; }
-
-/* Utilidades */
 .text-center { text-align: center; }
 .mt-16 { margin-top: 16px; }
 .mt-24 { margin-top: 24px; }

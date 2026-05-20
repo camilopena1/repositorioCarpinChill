@@ -12,6 +12,7 @@ export interface PerfilCliente {
   fechaNacimiento?: string;
   imagenUrl?: string;
   notas?: string;
+  paisCodigo?: string;
 }
 
 @Injectable({ providedIn: 'root' })

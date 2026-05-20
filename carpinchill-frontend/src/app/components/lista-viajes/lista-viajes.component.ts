@@ -11,7 +11,7 @@ import { SplashComponent } from '../splash/splash.component';
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule, SplashComponent],
   template: `
-    <app-splash *ngIf="mostrarSplash" (done)="mostrarSplash = false"></app-splash>
+    <app-splash *ngIf="mostrarSplash" [modoOscuro]="modoOscuro" (done)="mostrarSplash = false"></app-splash>
 
     <div class="pagina-viajes">
 
@@ -128,29 +128,29 @@ import { SplashComponent } from '../splash/splash.component';
     .pagina-viajes { padding: 16px 0; }
     .cabecera { text-align: center; margin-bottom: 32px; }
     .cabecera h1 { font-size: 32px; color: #1B4F72; margin: 0 0 8px; }
-    .cabecera p { color: #666; font-size: 16px; }
+    .cabecera p { color: var(--text-muted, #666); font-size: 16px; }
 
     .filtros {
       display: flex; gap: 12px; align-items: flex-end; margin-bottom: 28px;
-      flex-wrap: wrap; background: #f8f9fa; padding: 16px; border-radius: 12px;
+      flex-wrap: wrap; background: var(--bg-muted, #f8f9fa); padding: 16px; border-radius: 12px;
     }
     .filtro-grupo { display: flex; flex-direction: column; gap: 4px; }
-    .filtro-grupo label { font-size: 12px; font-weight: 600; color: #555; }
+    .filtro-grupo label { font-size: 12px; font-weight: 600; color: var(--text-label, #555); }
     .filtro-grupo input, .filtro-grupo select {
       padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px;
-      font-size: 13px; width: 150px; background: white;
+      font-size: 13px; width: 150px; background: var(--bg-input, white);
     }
     .filtro-grupo input[type="date"] { width: 155px; }
     .btn-limpiar {
       padding: 8px 16px; background: transparent; border: 1px solid #ccc;
-      border-radius: 8px; cursor: pointer; color: #666; font-size: 13px;
+      border-radius: 8px; cursor: pointer; color: var(--text-muted, #666); font-size: 13px;
       white-space: nowrap;
     }
     .btn-limpiar:hover { background: #eee; }
 
     .grid-viajes { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
     .tarjeta-viaje {
-      background: white; border-radius: 16px; overflow: hidden;
+      background: var(--bg-card, white); border-radius: 16px; overflow: hidden;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s;
     }
     .tarjeta-viaje:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
@@ -168,12 +168,12 @@ import { SplashComponent } from '../splash/splash.component';
     }
     .tarjeta-contenido { padding: 16px; }
     .tarjeta-contenido h3 { margin: 0 0 6px; font-size: 18px; color: #1B4F72; }
-    .destino { color: #666; font-size: 13px; margin: 0 0 8px; }
+    .destino { color: var(--text-muted, #666); font-size: 13px; margin: 0 0 8px; }
     .descripcion {
-      color: #444; font-size: 14px; line-height: 1.5; margin: 0 0 12px;
+      color: var(--text-primary, #444); font-size: 14px; line-height: 1.5; margin: 0 0 12px;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .tarjeta-fechas { font-size: 13px; color: #555; margin-bottom: 12px; }
+    .tarjeta-fechas { font-size: 13px; color: var(--text-muted, #555); margin-bottom: 12px; }
     .tarjeta-pie {
       display: flex; align-items: center; justify-content: space-between;
       padding-top: 12px; border-top: 1px solid #eee;
@@ -187,7 +187,7 @@ import { SplashComponent } from '../splash/splash.component';
       border-radius: 8px; text-decoration: none; font-size: 14px; transition: background 0.2s;
     }
     .btn-ver:hover { background: #154360; }
-    .estado-carga { text-align: center; padding: 60px; color: #666; }
+    .estado-carga { text-align: center; padding: 60px; color: var(--text-muted, #666); }
     .spinner {
       width: 40px; height: 40px; border: 4px solid #f0f0f0;
       border-top-color: #1B4F72; border-radius: 50%;
@@ -196,8 +196,8 @@ import { SplashComponent } from '../splash/splash.component';
     @keyframes spin { to { transform: rotate(360deg); } }
     .estado-error { text-align: center; padding: 40px; background: #fef3f3; border-radius: 12px; color: #c0392b; }
     .btn-reintentar { margin-top: 12px; padding: 8px 20px; background: #1B4F72; color: white; border: none; border-radius: 8px; cursor: pointer; }
-    .sin-resultados { text-align: center; padding: 60px; color: #888; font-size: 16px; }
-    .contador { text-align: center; margin-top: 24px; color: #888; font-size: 13px; }
+    .sin-resultados { text-align: center; padding: 60px; color: var(--text-muted, #888); font-size: 16px; }
+    .contador { text-align: center; margin-top: 24px; color: var(--text-muted, #888); font-size: 13px; }
   `]
 })
 export class ListaViajesComponent implements OnInit {
@@ -216,6 +216,7 @@ export class ListaViajesComponent implements OnInit {
   filtroOrden = '';
 
   mostrarSplash = !sessionStorage.getItem('splash_visto');
+  modoOscuro = localStorage.getItem('carpinchill_dark') === 'true';
 
   constructor(private viajesService: ViajesService) {}
 

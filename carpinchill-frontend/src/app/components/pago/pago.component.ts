@@ -155,25 +155,25 @@ import { ReservaService, ReservaResponse } from '../../services/reserva.service'
   styles: [`
     .pago-pagina {
       display: flex; justify-content: center; align-items: flex-start;
-      padding: 32px 16px; min-height: calc(100vh - 60px); background: #f0f4f8;
+      padding: 32px 16px; min-height: calc(100vh - 60px); background: var(--bg-app, #f0f4f8);
     }
     .pago-card {
-      background: white; border-radius: 20px; width: 100%; max-width: 520px;
+      background: var(--bg-card, white); border-radius: 20px; width: 100%; max-width: 520px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.1); padding: 32px;
     }
     .pago-header { text-align: center; margin-bottom: 24px; }
     .pago-logo { font-size: 48px; margin-bottom: 8px; }
     .pago-header h1 { font-size: 22px; color: #1B4F72; margin: 0 0 6px; }
-    .pago-subtitulo { color: #666; font-size: 14px; margin: 0; }
+    .pago-subtitulo { color: var(--text-muted, #666); font-size: 14px; margin: 0; }
 
     /* Resumen */
     .resumen-reserva {
-      background: #f8f9fa; border-radius: 12px; padding: 16px;
+      background: var(--bg-muted, #f8f9fa); border-radius: 12px; padding: 16px;
       margin-bottom: 24px; border: 1px solid #e9ecef;
     }
     .resumen-fila {
       display: flex; justify-content: space-between;
-      padding: 6px 0; font-size: 14px; color: #555;
+      padding: 6px 0; font-size: 14px; color: var(--text-primary, #555);
       border-bottom: 1px solid #eee;
     }
     .resumen-fila:last-child { border-bottom: none; }
@@ -210,26 +210,26 @@ import { ReservaService, ReservaResponse } from '../../services/reserva.service'
       background: #111; height: 40px; margin: 24px 0;
     }
     .tarjeta-cvv-zona {
-      background: white; margin: 0 16px; padding: 8px 12px;
+      background: var(--bg-card, white); margin: 0 16px; padding: 8px 12px;
       border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
     }
-    .tarjeta-cvv-valor { font-family: monospace; font-size: 16px; color: #333; }
+    .tarjeta-cvv-valor { font-family: monospace; font-size: 16px; color: var(--text-primary, #333); }
 
     /* Formulario */
     .form-tarjeta { display: flex; flex-direction: column; gap: 16px; }
     .campo-grupo { display: flex; flex-direction: column; gap: 5px; }
     .campo-grupo.doble { flex-direction: row; gap: 12px; }
     .campo-grupo.doble .campo { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 13px; font-weight: 600; color: #555; }
+    label { font-size: 13px; font-weight: 600; color: var(--text-label, #555); }
     input {
       padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
       font-size: 15px; transition: border-color 0.2s; font-family: monospace;
     }
     input:focus { outline: none; border-color: #1B4F72; box-shadow: 0 0 0 3px rgba(27,79,114,0.1); }
-    .campo-ayuda { font-size: 11px; color: #999; }
+    .campo-ayuda { font-size: 11px; color: var(--text-muted, #999); }
     .seguridad-info {
-      text-align: center; font-size: 12px; color: #888;
-      padding: 8px; background: #f8f9fa; border-radius: 8px;
+      text-align: center; font-size: 12px; color: var(--text-muted, #888);
+      padding: 8px; background: var(--bg-muted, #f8f9fa); border-radius: 8px;
     }
     .btn-pagar {
       background: #27ae60; color: white; border: none;
@@ -246,7 +246,7 @@ import { ReservaService, ReservaResponse } from '../../services/reserva.service'
     @keyframes spin { to { transform: rotate(360deg); } }
     .btn-cancelar-pago {
       display: block; text-align: center; margin-top: 14px;
-      color: #999; font-size: 13px; text-decoration: none;
+      color: var(--text-muted, #999); font-size: 13px; text-decoration: none;
     }
     .btn-cancelar-pago:hover { color: #555; }
 
@@ -257,7 +257,7 @@ import { ReservaService, ReservaResponse } from '../../services/reserva.service'
     .resultado.exito { background: #e8f5e9; border: 2px solid #4CAF50; }
     .resultado.error { background: #fef3f3; border: 2px solid #e74c3c; }
     .resultado-icono { font-size: 40px; margin-bottom: 10px; }
-    .resultado p { font-size: 15px; margin: 0 0 16px; color: #333; }
+    .resultado p { font-size: 15px; margin: 0 0 16px; color: var(--text-primary, #333); }
     .resultado-acciones { display: flex; justify-content: center; gap: 12px; }
     .btn-ver-reservas {
       background: #1B4F72; color: white; padding: 10px 20px;

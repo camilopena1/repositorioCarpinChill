@@ -6,6 +6,7 @@ import { ViajesService } from '../../services/viajes.service';
 import { AuthService } from '../../services/auth.service';
 import { ReservaService, ReservaResponse } from '../../services/reserva.service';
 import { Viaje } from '../../models/viaje.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-admin',
@@ -25,6 +26,9 @@ import { Viaje } from '../../models/viaje.model';
           </button>
           <button class="tab" [class.activo]="tab === 'reservas'" (click)="tab = 'reservas'; cargarReservas()">
             📋 Reservas ({{ reservas.length }})
+          </button>
+          <button class="tab" [class.activo]="tab === 'agentes'" (click)="tab = 'agentes'">
+            👤 Agentes
           </button>
         </div>
       </div>
@@ -181,75 +185,112 @@ import { Viaje } from '../../models/viaje.model';
         </div>
       </div>
 
+      <!-- Pestaña Agentes -->
+      <div *ngIf="tab === 'agentes'">
+        <div class="tab-cabecera">
+          <span>Crear nuevo agente</span>
+        </div>
+        <div class="form-agente">
+          <div *ngIf="mensajeAgente" class="mensaje" [class.error]="errorAgente">{{ mensajeAgente }}</div>
+          <div class="agente-campos">
+            <div class="campo-agente">
+              <label>Nombre</label>
+              <input [(ngModel)]="nuevoAgente.nombre" placeholder="Nombre" />
+            </div>
+            <div class="campo-agente">
+              <label>Apellidos</label>
+              <input [(ngModel)]="nuevoAgente.apellidos" placeholder="Apellidos" />
+            </div>
+            <div class="campo-agente">
+              <label>Email</label>
+              <input [(ngModel)]="nuevoAgente.email" type="email" placeholder="agente@carpinchill.com" />
+            </div>
+            <div class="campo-agente">
+              <label>Contraseña</label>
+              <input [(ngModel)]="nuevoAgente.password" type="password" placeholder="Mínimo 6 caracteres" />
+            </div>
+          </div>
+          <button class="btn-nuevo" (click)="crearAgente()" [disabled]="creandoAgente">
+            {{ creandoAgente ? 'Creando...' : '+ Crear agente' }}
+          </button>
+        </div>
+      </div>
+
     </div>
   `,
   styles: [`
     .admin-pagina { padding: 16px 0; }
     .admin-cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-    .admin-cabecera h1 { font-size: 24px; color: #1B4F72; margin: 0; }
+    .admin-cabecera h1 { font-size: 24px; color: var(--heading, #1B4F72); margin: 0; }
     .tabs { display: flex; gap: 8px; }
     .tab { padding: 9px 18px; border: 2px solid #1B4F72; background: white; color: #1B4F72; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
     .tab.activo { background: #1B4F72; color: white; }
     .tab-cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .tab-cabecera span { color: #888; font-size: 13px; }
+    .tab-cabecera span { color: var(--text-muted, #888); font-size: 13px; }
     .btn-nuevo { background: #1B4F72; color: white; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
     .btn-nuevo:hover { background: #154360; }
-    .filtro-estado { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; }
-    .filtro-estado select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+    .filtro-estado { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-label, #555); }
+    .filtro-estado select { padding: 6px 10px; border: 1px solid var(--border, #ddd); border-radius: 6px; font-size: 13px; }
     .mensaje { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; background: #d5f5e3; color: #1e8449; font-size: 14px; }
     .mensaje.error { background: #fdecea; color: #c0392b; }
     .tabla-contenedor { overflow-x: auto; }
-    .tabla-admin { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+    .tabla-admin { width: 100%; border-collapse: collapse; background: var(--bg-card, white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px var(--shadow, rgba(0,0,0,0.07)); }
     .tabla-admin th { background: #1B4F72; color: white; padding: 11px 13px; text-align: left; font-size: 13px; }
-    .tabla-admin td { padding: 11px 13px; border-bottom: 1px solid #f0f0f0; font-size: 13px; color: #333; }
+    .tabla-admin td { padding: 11px 13px; border-bottom: 1px solid var(--border, #f0f0f0); font-size: 13px; color: var(--text-primary, #333); }
     .tabla-admin tr:last-child td { border-bottom: none; }
     .tabla-admin tr.inactivo td { opacity: 0.5; }
-    .tabla-admin tr:hover td { background: #f8f9fa; }
+    .tabla-admin tr:hover td { background: var(--bg-muted, #f8f9fa); }
+    .form-agente { background: var(--bg-card, white); border-radius: 14px; padding: 24px; box-shadow: 0 2px 12px var(--shadow, rgba(0,0,0,0.07)); }
+    .agente-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .campo-agente { display: flex; flex-direction: column; gap: 5px; }
+    .campo-agente label { font-size: 12px; font-weight: 600; color: var(--text-label, #555); }
+    .campo-agente input { padding: 9px 11px; border: 1px solid var(--border, #ddd); border-radius: 8px; font-size: 13px; background: var(--bg-input, white); color: var(--text-primary, #333); }
+    @media (max-width: 600px) { .agente-campos { grid-template-columns: 1fr; } }
     .link-titulo { color: #1B4F72; text-decoration: none; font-weight: 500; }
     .link-titulo:hover { text-decoration: underline; }
     .pocas { color: #e74c3c; font-weight: 600; }
     .badge { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
     .badge-activo { background: #d5f5e3; color: #1e8449; }
-    .badge-inactivo { background: #f0f0f0; color: #888; }
+    .badge-inactivo { background: var(--bg-muted, #f0f0f0); color: var(--text-muted, #888); }
     .badge-pendiente { background: #fef9e7; color: #d68910; }
     .badge-cancelada { background: #fdecea; color: #c0392b; }
     .acciones { display: flex; gap: 5px; flex-wrap: wrap; }
-    .btn-accion { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 4px 9px; cursor: pointer; font-size: 12px; transition: background 0.15s; white-space: nowrap; }
-    .btn-accion:hover { background: #f0f0f0; }
+    .btn-accion { background: none; border: 1px solid var(--border, #ddd); border-radius: 6px; padding: 4px 9px; cursor: pointer; font-size: 12px; transition: background 0.15s; white-space: nowrap; }
+    .btn-accion:hover { background: var(--bg-muted, #f0f0f0); }
     .btn-confirmar { border-color: #1e8449; color: #1e8449; }
     .btn-confirmar:hover { background: #d5f5e3; }
     .btn-cancelar-res { border-color: #c0392b; color: #c0392b; }
     .btn-cancelar-res:hover { background: #fdecea; }
     .btn-danger:hover { background: #fdecea; }
-    .sin-acciones { color: #ccc; font-size: 13px; }
-    .sin-datos { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
+    .sin-acciones { color: var(--text-muted, #ccc); font-size: 13px; }
+    .sin-datos { text-align: center; padding: 32px; color: var(--text-muted, #aaa); font-size: 14px; }
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .modal { background: white; border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+    .modal { background: var(--bg-card, white); border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
     .modal-pequeno { max-width: 420px; padding: 28px; }
     .modal-pequeno h2 { margin: 0 0 12px; color: #c0392b; }
-    .modal-pequeno p { color: #555; margin-bottom: 24px; }
+    .modal-pequeno p { color: var(--text-primary, #555); margin-bottom: 24px; }
     .modal-cabecera { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 0; }
-    .modal-cabecera h2 { margin: 0; color: #1B4F72; font-size: 20px; }
-    .btn-cerrar { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; }
+    .modal-cabecera h2 { margin: 0; color: var(--heading, #1B4F72); font-size: 20px; }
+    .btn-cerrar { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted, #888); }
     .modal-cuerpo { padding: 20px 24px; }
     .campo { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
-    .campo label { font-size: 13px; font-weight: 600; color: #555; }
+    .campo label { font-size: 13px; font-weight: 600; color: var(--text-primary, #555); }
     .campo input, .campo textarea { padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
     .campo input:focus, .campo textarea:focus { outline: none; border-color: #1B4F72; }
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-pie { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #eee; }
-    .btn-cancelar { padding: 9px 20px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .modal-pie { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border, #eee); }
+    .btn-cancelar { padding: 9px 20px; background: var(--bg-muted, #f0f0f0); border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
     .btn-guardar { padding: 9px 20px; background: #1B4F72; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
     .btn-guardar:disabled { background: #aaa; cursor: not-allowed; }
     .btn-eliminar-confirm { padding: 9px 20px; background: #c0392b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
-    .cargando { text-align: center; padding: 60px; color: #666; }
+    .cargando { text-align: center; padding: 60px; color: var(--text-muted, #666); }
     .spinner { width: 36px; height: 36px; border: 4px solid #f0f0f0; border-top-color: #1B4F72; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
   `]
 })
 export class AdminComponent implements OnInit {
 
-  tab: 'viajes' | 'reservas' = 'viajes';
+  tab: 'viajes' | 'reservas' | 'agentes' = 'viajes';
 
   // Viajes
   viajes: Viaje[] = [];
@@ -267,6 +308,12 @@ export class AdminComponent implements OnInit {
   reservas: ReservaResponse[] = [];
   reservasFiltradas: ReservaResponse[] = [];
   filtroEstado = '';
+
+  // Agentes
+  nuevoAgente = { nombre: '', apellidos: '', email: '', password: '' };
+  creandoAgente = false;
+  mensajeAgente = '';
+  errorAgente = false;
 
   constructor(
     private viajesService: ViajesService,
@@ -399,5 +446,41 @@ export class AdminComponent implements OnInit {
     this.mensaje = texto;
     this.esError = error;
     setTimeout(() => this.mensaje = '', 4000);
+  }
+
+  crearAgente(): void {
+    if (!this.nuevoAgente.nombre || !this.nuevoAgente.apellidos ||
+        !this.nuevoAgente.email || !this.nuevoAgente.password) {
+      this.mensajeAgente = 'Todos los campos son obligatorios.';
+      this.errorAgente = true; return;
+    }
+    if (this.nuevoAgente.password.length < 6) {
+      this.mensajeAgente = 'La contraseña debe tener al menos 6 caracteres.';
+      this.errorAgente = true; return;
+    }
+    this.creandoAgente = true;
+    this.mensajeAgente = '';
+    const token = this.authService.getToken();
+    const headersObj: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headersObj['Authorization'] = `Bearer ${token}`;
+    fetch(`${environment.apiUrl}/auth/crear-agente`, {
+      method: 'POST',
+      headers: headersObj,
+      body: JSON.stringify(this.nuevoAgente)
+    }).then(r => r.json()).then(data => {
+      if (data.id) {
+        this.mensajeAgente = `✅ Agente ${data.nombre} creado correctamente.`;
+        this.errorAgente = false;
+        this.nuevoAgente = { nombre: '', apellidos: '', email: '', password: '' };
+      } else {
+        this.mensajeAgente = data.error || 'Error al crear el agente.';
+        this.errorAgente = true;
+      }
+      this.creandoAgente = false;
+    }).catch(() => {
+      this.mensajeAgente = 'Error de conexión con el servidor.';
+      this.errorAgente = true;
+      this.creandoAgente = false;
+    });
   }
 }

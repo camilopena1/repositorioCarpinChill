@@ -131,24 +131,24 @@ const PAISES = [
     .avatar { width:100%; height:100%; object-fit:cover; }
     .perfil-header-info h1 { margin:0 0 6px; font-size:24px; color:#1B4F72; }
     .rol-badge { background:#1B4F72; color:white; padding:3px 10px; border-radius:12px; font-size:11px; text-transform:uppercase; font-weight:700; }
-    .email-usuario { margin:8px 0 0; color:#666; font-size:14px; }
+    .email-usuario { margin:8px 0 0; color:var(--text-muted, #666); font-size:14px; }
     .bandera-preview { font-size:20px; margin-left:8px; }
     .alerta { padding:12px 16px; border-radius:10px; margin-bottom:20px; font-size:14px; }
     .alerta-ok { background:#e8f5e9; color:#2e7d32; border-left:4px solid #4CAF50; }
     .alerta-error { background:#fef3f3; color:#c0392b; border-left:4px solid #e74c3c; }
-    .perfil-form h2 { font-size:18px; color:#333; margin:0 0 20px; }
+    .perfil-form h2 { font-size:18px; color:var(--text-primary, #333); margin:0 0 20px; }
     .campo-grupo { display:flex; gap:16px; margin-bottom:16px; }
     .campo-grupo.doble .campo { flex:1; }
     .campo { display:flex; flex-direction:column; gap:5px; }
     .campo-full { flex:1; }
-    .campo label { font-size:13px; font-weight:600; color:#555; }
+    .campo label { font-size:13px; font-weight:600; color:var(--text-label, #555); }
     .campo input, .campo select, .campo textarea { padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit; background:var(--bg-input, white); color:var(--text-primary, #333); }
     .campo textarea { resize:vertical; min-height:80px; }
-    .campo-ayuda { font-size:11px; color:#999; }
+    .campo-ayuda { font-size:11px; color:var(--text-muted, #999); }
     .perfil-acciones { display:flex; align-items:center; gap:16px; margin-top:24px; padding-top:20px; border-top:1px solid #eee; }
     .btn-guardar { background:#1B4F72; color:white; border:none; padding:10px 24px; border-radius:10px; font-size:15px; cursor:pointer; font-weight:600; }
     .btn-guardar:disabled { opacity:0.6; cursor:not-allowed; }
-    .btn-volver { color:#666; font-size:14px; text-decoration:none; }
+    .btn-volver { color:var(--text-muted, #666); font-size:14px; text-decoration:none; }
     @media (max-width:600px) { .campo-grupo.doble { flex-direction:column; } .perfil-header { flex-direction:column; text-align:center; } }
   `]
 })

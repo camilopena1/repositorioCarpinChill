@@ -180,7 +180,6 @@ import { Viaje } from '../../models/viaje.model';
             <div *ngFor="let c of comentarios" class="comentario-card">
               <div class="comentario-header">
                 <div class="comentario-autor" (click)="abrirModal(c)" style="cursor:pointer">
-                  <!-- Foto de perfil del usuario o iniciales -->
                   <div class="avatar-comentario">
                     <img *ngIf="c.usuario?.imagenUrl" [src]="c.usuario?.imagenUrl" [alt]="c.usuario?.nombre" class="avatar-img" (error)="onAvatarComentarioError($event, c)"/>
                     <div *ngIf="!c.usuario?.imagenUrl" class="avatar-iniciales">{{ getIniciales(c) }}</div>
@@ -196,9 +195,20 @@ import { Viaje } from '../../models/viaje.model';
                   </div>
                   <span class="fecha-comentario">{{ c.fechaComentario | date:'dd/MM/yyyy' }}</span>
                   <span class="fecha-edicion" *ngIf="c.fechaEdicion">· Editado {{ c.fechaEdicion | date:'dd/MM/yyyy' }}</span>
+                  <button *ngIf="esMiComentario(c)" class="btn-editar-com" (click)="iniciarEdicion(c)">✏️ Editar</button>
                 </div>
               </div>
-              <p class="comentario-texto" *ngIf="c.comentario">{{ c.comentario }}</p>
+              <div *ngIf="comentarioEditandoId === c.id" class="form-edicion">
+                <div class="estrellas-input">
+                  <span *ngFor="let i of [1,2,3,4,5]" class="estrella-btn" [class.activa]="editValoracion >= i" (click)="editValoracion = i">★</span>
+                </div>
+                <textarea [(ngModel)]="editTexto" rows="2" placeholder="Edita tu comentario..."></textarea>
+                <div class="edicion-acciones">
+                  <button class="btn-comentar" (click)="guardarEdicion(c)" [disabled]="editValoracion === 0">Guardar</button>
+                  <button class="btn-cancelar-edicion" (click)="cancelarEdicion()">Cancelar</button>
+                </div>
+              </div>
+              <p class="comentario-texto" *ngIf="c.comentario && comentarioEditandoId !== c.id">{{ c.comentario }}</p>
             </div>
           </div>
 
@@ -230,74 +240,79 @@ import { Viaje } from '../../models/viaje.model';
     .detalle-overlay h1 { margin: 0 0 4px; font-size: 26px; }
     .detalle-overlay p { margin: 0; opacity: 0.85; }
     .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .info-card { background: #f8f9fa; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
-    .lbl { font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase; }
-    .val { font-size: 15px; color: #333; font-weight: 500; }
-    .val.precio { font-size: 22px; color: #1B4F72; font-weight: bold; }
+    .info-card { background: var(--bg-muted, #f8f9fa); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+    .lbl { font-size: 11px; color: var(--text-muted, #888); font-weight: 700; text-transform: uppercase; }
+    .val { font-size: 15px; color: var(--text-primary, #333); font-weight: 500; }
+    .val.precio { font-size: 22px; color: var(--heading, #1B4F72); font-weight: bold; }
     .pocas { color: #e74c3c; }
-    .clima-extra { font-size: 12px; color: #888; }
+    .clima-extra { font-size: 12px; color: var(--text-muted, #888); }
     .cargando-clima .lbl { color: #aaa; }
     .seccion { margin-bottom: 28px; }
-    .seccion h2 { color: #1B4F72; margin: 0 0 10px; font-size: 18px; }
-    .seccion p { color: #444; line-height: 1.7; margin: 0; }
-    .sub { color: #888; font-size: 13px; margin: -6px 0 10px; }
+    .seccion h2 { color: var(--heading, #1B4F72); margin: 0 0 10px; font-size: 18px; }
+    .seccion p { color: var(--text-primary, #444); line-height: 1.7; margin: 0; }
+    .sub { color: var(--text-muted, #888); font-size: 13px; margin: -6px 0 10px; }
     .mapa { height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #e0e0e0; background: #f0f4f8; }
-    .reserva-sec { background: #f8f9fa; border-radius: 14px; padding: 22px; }
+    .reserva-sec { background: var(--bg-card, #f8f9fa); border-radius: 14px; padding: 22px; }
     .reserva-login { text-align: center; padding: 16px; }
-    .reserva-login p { color: #666; margin-bottom: 12px; }
+    .reserva-login p { color: var(--text-muted, #666); margin-bottom: 12px; }
     .btn-login { display: inline-block; background: #1B4F72; color: white; padding: 9px 22px; border-radius: 8px; text-decoration: none; font-weight: 600; }
     .sin-plazas { text-align: center; padding: 16px; color: #c0392b; background: #fdecea; border-radius: 8px; }
     .form-reserva { max-width: 440px; }
     .campo { margin-bottom: 16px; }
-    .campo label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
-    .campo small { color: #888; font-size: 12px; display: block; margin-top: 4px; }
+    .campo label { display: block; font-size: 13px; font-weight: 600; color: var(--text-label, #555); margin-bottom: 6px; }
+    .campo small { color: var(--text-muted, #888); font-size: 12px; display: block; margin-top: 4px; }
     .campo textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 7px; font-size: 14px; resize: vertical; font-family: inherit; box-sizing: border-box; }
     .personas { display: flex; align-items: center; gap: 14px; }
-    .personas button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #1B4F72; background: white; color: #1B4F72; font-size: 18px; cursor: pointer; }
+    .personas button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #1B4F72; background: var(--bg-card, white); color: var(--heading, #1B4F72); font-size: 18px; cursor: pointer; }
     .personas button:disabled { opacity: 0.3; cursor: not-allowed; }
-    .personas span { font-size: 22px; font-weight: bold; color: #1B4F72; min-width: 28px; text-align: center; }
-    .resumen { background: white; border-radius: 8px; padding: 14px; margin-bottom: 16px; border: 1px solid #e0e0e0; }
-    .resumen-fila { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: #555; border-bottom: 1px solid #f0f0f0; }
+    .personas span { font-size: 22px; font-weight: bold; color: var(--heading, #1B4F72); min-width: 28px; text-align: center; }
+    .resumen { background: var(--bg-muted, #f8f9fa); border-radius: 8px; padding: 14px; margin-bottom: 16px; border: 1px solid var(--border, #e0e0e0); }
+    .resumen-fila { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: var(--text-muted, #555); border-bottom: 1px solid var(--border, #f0f0f0); }
     .resumen-fila:last-child { border-bottom: none; }
-    .resumen-fila.total { font-size: 17px; font-weight: bold; color: #1B4F72; padding-top: 10px; margin-top: 4px; }
+    .resumen-fila.total { font-size: 17px; font-weight: bold; color: var(--heading, #1B4F72); padding-top: 10px; margin-top: 4px; }
     .error-reserva { background: #fdecea; color: #c0392b; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
     .btn-reservar { width: 100%; padding: 13px; background: #1B4F72; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
     .btn-reservar:disabled { background: #aaa; cursor: not-allowed; }
     .reserva-confirmada { text-align: center; padding: 20px; }
     .ok-icono { font-size: 44px; margin-bottom: 10px; }
     .reserva-confirmada h3 { color: #1e8449; margin: 0 0 6px; }
-    .reserva-confirmada p { color: #555; margin: 0 0 12px; }
+    .reserva-confirmada p { color: var(--text-primary, #555); margin: 0 0 12px; }
     .ok-det { background: #d5f5e3; color: #1e8449; padding: 8px 18px; border-radius: 6px; display: inline-block; margin-bottom: 16px; font-weight: 600; font-size: 14px; }
     .reserva-confirmada button { background: none; border: 2px solid #1B4F72; color: #1B4F72; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-    .estado-carga, .estado-error { text-align: center; padding: 50px; color: #666; }
+    .estado-carga, .estado-error { text-align: center; padding: 50px; color: var(--text-muted, #666); }
     .spinner { width: 32px; height: 32px; border: 4px solid #f0f0f0; border-top-color: #1B4F72; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Comentarios */
-    .comentarios-sec { background: #f8f9fa; border-radius: 14px; padding: 22px; }
+    .comentarios-sec { background: var(--bg-card, #f8f9fa); border-radius: 14px; padding: 22px; }
     .avatar-comentario { width:40px; height:40px; border-radius:50%; overflow:hidden; flex-shrink:0; border:2px solid #1B4F72; }
     .avatar-img { width:100%; height:100%; object-fit:cover; }
     .avatar-iniciales { width:100%; height:100%; background:#1B4F72; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; }
     .autor-info { display:flex; align-items:center; gap:6px; }
     .nombre-autor { font-weight:600; font-size:14px; }
     .bandera-usuario { font-size:18px; }
-    .fecha-edicion { font-size:11px; color:#999; font-style:italic; }
-    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
-    .modal-card { background:white; border-radius:20px; padding:32px; text-align:center; min-width:280px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+    .fecha-edicion { font-size:11px; color: var(--text-muted, #999); font-style:italic; }
+    .btn-editar-com { background:none; border:1px solid #1B4F72; color:#1B4F72; padding:3px 8px; border-radius:6px; font-size:11px; cursor:pointer; margin-left:8px; }
+    .btn-editar-com:hover { background:#1B4F72; color:white; }
+    .form-edicion { margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+    .form-edicion textarea { padding:8px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:14px; resize:vertical; }
+    .edicion-acciones { display:flex; gap:8px; }
+    .btn-cancelar-edicion { background:none; border:1px solid #ccc; color:var(--text-muted, #666); padding:6px 14px; border-radius:8px; cursor:pointer; font-size:13px; }
+    .modal-card { background: var(--bg-card, white); border-radius:20px; padding:32px; text-align:center; min-width:280px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
     .modal-cerrar { position:absolute; top:12px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
     .modal-avatar { width:80px; height:80px; border-radius:50%; overflow:hidden; margin:0 auto 16px; border:3px solid #1B4F72; }
     .modal-avatar img { width:100%; height:100%; object-fit:cover; }
     .modal-iniciales { width:100%; height:100%; background:#1B4F72; color:white; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; }
     .modal-card h3 { margin:0 0 8px; color:#1B4F72; }
     .modal-bandera { font-size:18px; margin:4px 0; }
-    .modal-email { color:#888; font-size:13px; margin:4px 0 0; }
+    .modal-email { color:var(--text-muted, #888); font-size:13px; margin:4px 0 0; }
     .form-comentario { background: white; border-radius: 10px; padding: 18px; margin-bottom: 20px; border: 1px solid #e8e8e8; }
     .form-comentario h3 { margin: 0 0 14px; font-size: 15px; color: #1B4F72; }
     .estrellas-input { display: flex; align-items: center; gap: 6px; }
     .estrella-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #ddd; transition: color 0.15s; padding: 0; line-height: 1; }
     .estrella-btn.activa { color: #f39c12; }
     .estrella-btn:hover { color: #f39c12; }
-    .estrella-label { font-size: 13px; color: #888; margin-left: 4px; }
+    .estrella-label { font-size: 13px; color: var(--text-muted, #888); margin-left: 4px; }
     .btn-comentar { padding: 10px 22px; background: #1B4F72; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
     .btn-comentar:disabled { background: #aaa; cursor: not-allowed; }
     .comentario-ok { background: #d5f5e3; color: #1e8449; padding: 12px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 16px; }
@@ -307,12 +322,12 @@ import { Viaje } from '../../models/viaje.model';
     .comentario-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
     .comentario-autor { display: flex; align-items: center; gap: 10px; }
     .avatar { width: 36px; height: 36px; border-radius: 50%; background: #1B4F72; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-    .nombre-autor { font-weight: 600; color: #333; font-size: 14px; }
+    .nombre-autor { font-weight: 600; color: var(--text-primary, #333); font-size: 14px; }
     .comentario-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
     .estrellas { color: #ddd; font-size: 16px; letter-spacing: 1px; }
     .estrellas .llena { color: #f39c12; }
     .fecha-comentario { font-size: 11px; color: #aaa; }
-    .comentario-texto { color: #555; font-size: 14px; line-height: 1.6; margin: 0; }
+    .comentario-texto { color: var(--text-primary, #555); font-size: 14px; line-height: 1.6; margin: 0; }
 
     @media (max-width: 600px) {
       .detalle-imagen { height: 200px; }
@@ -421,6 +436,41 @@ export class DetalleViajeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getEstrellas(valoracion: number): boolean[] {
     return [1, 2, 3, 4, 5].map(i => i <= valoracion);
+  }
+
+  comentarioEditandoId: number | null = null;
+  editValoracion = 0;
+  editTexto = '';
+
+  esMiComentario(c: Comentario): boolean {
+    const usuario = this.authService.getUsuarioActual();
+    return !!usuario && c.usuario?.email === usuario.email;
+  }
+
+  iniciarEdicion(c: Comentario): void {
+    this.comentarioEditandoId = c.id || null;
+    this.editValoracion = c.valoracion;
+    this.editTexto = c.comentario || '';
+  }
+
+  cancelarEdicion(): void {
+    this.comentarioEditandoId = null;
+    this.editValoracion = 0;
+    this.editTexto = '';
+  }
+
+  guardarEdicion(c: Comentario): void {
+    if (!c.id || this.editValoracion === 0) return;
+    this.comentarioService.editarComentario(c.id, this.editValoracion, this.editTexto).subscribe({
+      next: (actualizado) => {
+        const idx = this.comentarios.findIndex(x => x.id === c.id);
+        if (idx !== -1) this.comentarios[idx] = actualizado;
+        this.cancelarEdicion();
+      },
+      error: (err) => {
+        alert(typeof err.error === 'string' ? err.error : 'Error al editar el comentario.');
+      }
+    });
   }
 
   usuarioModal: any = null;

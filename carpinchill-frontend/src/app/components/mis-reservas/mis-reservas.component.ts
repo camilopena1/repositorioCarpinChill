@@ -48,16 +48,16 @@ import { AuthService } from '../../services/auth.service';
     .cargando{text-align:center;padding:50px}
     .spinner{width:30px;height:30px;border:4px solid #f0f0f0;border-top-color:#1B4F72;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .vacio{text-align:center;padding:50px;color:#666}
+    .vacio{text-align:center;padding:50px;color:var(--text-muted, #666)}
     .btn-cat{display:inline-block;background:#1B4F72;color:white;padding:9px 20px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:12px}
     .lista{display:flex;flex-direction:column;gap:14px}
-    .card{background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden}
-    .card-cab{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8f9fa;border-bottom:1px solid #f0f0f0}
+    .card{background:var(--bg-card, white);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden}
+    .card-cab{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-muted, #f8f9fa);border-bottom:1px solid var(--border, #f0f0f0)}
     .rid{font-weight:600;color:#1B4F72;margin-right:10px;font-size:14px} .fecha{font-size:12px;color:#888}
     .badge{padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600}
     .estado-pendiente{background:#fff3cd;color:#856404} .estado-confirmada{background:#d5f5e3;color:#1e8449} .estado-cancelada{background:#f8d7da;color:#842029}
     .card-body{padding:12px 16px;display:flex;flex-wrap:wrap;gap:14px}
-    .info{display:flex;flex-direction:column;gap:2px} .lbl{font-size:10px;color:#888;font-weight:700;text-transform:uppercase}
+    .info{display:flex;flex-direction:column;gap:2px} .lbl{font-size:10px;color:var(--text-muted, #888);font-weight:700;text-transform:uppercase}
     .precio{font-size:17px;font-weight:bold;color:#1B4F72}
     .card-pie{display:flex;gap:10px;padding:10px 16px;border-top:1px solid #f0f0f0;align-items:center;flex-wrap:wrap}
     .btn-ver{display:inline-block;background:#1B4F72;color:white;padding:6px 14px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:600}
