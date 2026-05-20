@@ -2,8 +2,10 @@ package com.carpinchill.service;
 
 import com.carpinchill.model.Viaje;
 import com.carpinchill.repository.ComentarioRepository;
+import com.carpinchill.repository.ReservaRepository;
 import com.carpinchill.repository.ViajeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -15,10 +17,13 @@ public class ViajeService {
 
     private final ViajeRepository viajeRepository;
     private final ComentarioRepository comentarioRepository;
+    private final ReservaRepository reservaRepository;
 
-    public ViajeService(ViajeRepository viajeRepository, ComentarioRepository comentarioRepository) {
+    public ViajeService(ViajeRepository viajeRepository, ComentarioRepository comentarioRepository,
+                        ReservaRepository reservaRepository) {
         this.viajeRepository = viajeRepository;
         this.comentarioRepository = comentarioRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     public List<Viaje> obtenerTodos() {
@@ -142,8 +147,12 @@ public class ViajeService {
         viajeRepository.save(v);
     }
 
+    @Transactional
     public void eliminar(Long id) {
         obtenerPorId(id);
+        // Borrar primero los registros dependientes para evitar errores de foreign key
+        comentarioRepository.deleteByViajeId(id);
+        reservaRepository.deleteByViajeId(id);
         viajeRepository.deleteById(id);
     }
 }
