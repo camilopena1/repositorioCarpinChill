@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ViajesService } from '../../services/viajes.service';
@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, CurrencyPipe, RouterLink, FormsModule],
   template: `
     <div class="admin-pagina">
 
@@ -21,6 +21,9 @@ import { environment } from '../../../environments/environment';
           <h1>⚙️ Panel de administración</h1>
         </div>
         <div class="tabs">
+          <button class="tab" [class.activo]="tab === 'resumen'" (click)="tab = 'resumen'; cargarStats()">
+            📊 Resumen
+          </button>
           <button class="tab" [class.activo]="tab === 'viajes'" (click)="tab = 'viajes'; cargarTodos()">
             🌍 Viajes ({{ viajes.length }})
           </button>
@@ -43,6 +46,54 @@ import { environment } from '../../../environments/environment';
       </div>
 
       <!-- ===== TAB VIAJES ===== -->
+      <!-- Pestaña Resumen -->
+      <div *ngIf="tab === 'resumen'">
+        <div *ngIf="cargandoStats" class="cargando">Cargando estadísticas...</div>
+        <div *ngIf="!cargandoStats && stats" class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icono">🌍</div>
+            <div class="stat-valor">{{ stats.viajesActivos }}</div>
+            <div class="stat-label">Viajes activos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icono">👥</div>
+            <div class="stat-valor">{{ stats.totalUsuarios }}</div>
+            <div class="stat-label">Usuarios registrados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icono">⏳</div>
+            <div class="stat-valor">{{ stats.reservasPendientes }}</div>
+            <div class="stat-label">Reservas pendientes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icono">✅</div>
+            <div class="stat-valor">{{ stats.reservasConfirmadas }}</div>
+            <div class="stat-label">Reservas confirmadas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icono">❌</div>
+            <div class="stat-valor">{{ stats.reservasCanceladas }}</div>
+            <div class="stat-label">Reservas canceladas</div>
+          </div>
+          <div class="stat-card stat-highlight">
+            <div class="stat-icono">💶</div>
+            <div class="stat-valor">{{ stats.ingresosTotales | currency:'EUR':'symbol':'1.0-0' }}</div>
+            <div class="stat-label">Ingresos confirmados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icono">💳</div>
+            <div class="stat-valor">{{ stats.pagosCompletados }}</div>
+            <div class="stat-label">Pagos completados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icono">🚫</div>
+            <div class="stat-valor">{{ stats.pagosRechazados }}</div>
+            <div class="stat-label">Pagos rechazados</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña Viajes -->
       <div *ngIf="tab === 'viajes' && !cargando">
         <div class="tab-cabecera">
           <span>{{ viajes.length }} viajes registrados</span>
@@ -220,6 +271,12 @@ import { environment } from '../../../environments/environment';
   `,
   styles: [`
     .admin-pagina { padding: 16px 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 8px; }
+    .stat-card { background: var(--bg-card, white); border-radius: 14px; padding: 20px; text-align: center; box-shadow: 0 2px 12px var(--shadow, rgba(0,0,0,0.07)); border: 1px solid var(--border, #eee); }
+    .stat-card.stat-highlight { border-color: #1B4F72; }
+    .stat-icono { font-size: 28px; margin-bottom: 8px; }
+    .stat-valor { font-size: 28px; font-weight: 800; color: var(--heading, #1B4F72); margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: var(--text-muted, #888); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
     .admin-cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .admin-cabecera h1 { font-size: 24px; color: var(--heading, #1B4F72); margin: 0; }
     .tabs { display: flex; gap: 8px; }
@@ -290,7 +347,11 @@ import { environment } from '../../../environments/environment';
 })
 export class AdminComponent implements OnInit {
 
-  tab: 'viajes' | 'reservas' | 'agentes' = 'viajes';
+  tab: 'viajes' | 'reservas' | 'agentes' | 'resumen' = 'resumen';
+
+  // Stats
+  stats: any = null;
+  cargandoStats = false;
 
   // Viajes
   viajes: Viaje[] = [];
@@ -322,8 +383,21 @@ export class AdminComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.cargarStats();
     this.cargarTodos();
     this.cargarReservas();
+  }
+
+  // ===== STATS =====
+  cargarStats(): void {
+    this.cargandoStats = true;
+    const token = this.authService.getToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    fetch(`${environment.apiUrl}/stats`, { headers })
+      .then(r => r.json())
+      .then(data => { this.stats = data; this.cargandoStats = false; })
+      .catch(() => { this.cargandoStats = false; });
   }
 
   // ===== VIAJES =====
